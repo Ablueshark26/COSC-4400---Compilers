@@ -6,15 +6,23 @@
  * TA-BOT:MAILTO luke.sharba@marquette.edu 
  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
  */
-import java.io.BufferedReader;                                              import java.io.InputStreamReader;      
+import java.io.BufferedReader;                  
+import java.io.InputStreamReader;      
 
 public class Scanner{
-	
+
+	public final boolean Debug = true;	
 	
 	public enum CharType
 	{ LETTER, DIGIT, OPERATORS, PUNC, STR, OTHER};
       	
 	public CharType characterClass[] = new CharType[256];
+
+	public enum State
+	{ START, BUILDING, ACCEPT, ERR };
+
+	public State next_state[][] =
+	{ {}}
 
 	public Scanner()
 	{
@@ -42,7 +50,37 @@ public class Scanner{
 	}
 
 }
+public String getToken (java.io.Reader reader) throws java.io.IOException
+{
+	State state = State.Start;
+	int c = reader.read();
 
+	String lexeme = "";
+
+	while (-1 != c)
+	{
+		CharType charClass = characterClass[c];
+		if (Debug) System.out.print ("state = " + state + ", class = " + charClass);
+		state = next_state[state.ordinal() ][charClass.ordinal() ];
+		if (Debug) System.out.println (" ==> state = " + state);
+		switch (state)
+		{
+			case BUILDING:
+				lexeme = lexeme + (char) c;
+				c = reader.read();
+				break;
+			case ACCEPT:
+				return "ID(" + lexeme + ")";
+			case ERR:
+				//Temp message will need to put out required Error
+				return "ERROR_TOKEN";
+			default:
+				System.err.println("ERROR: Reached wrong state " + state);
+				return "ERROR_TOKEN";
+		}
+	}
+	return "EOF"
+}
 
 
 
