@@ -22,7 +22,7 @@ public class Scanner{
 	{ START, BUILDING, ACCEPT, ERR };
 
 	public State next_state[][] =
-	{ {}}
+	{ {}};
 
 	public Scanner()
 	{
@@ -46,7 +46,7 @@ public class Scanner{
 		characterClass[62] = CharType.OPERATORS;
 		characterClass[61] = CharType.OPERATORS;
 		characterClass[33] = CharType.OPERATORS;
-		characterClass[] = CharType.
+		//characterClass[] = CharType.
 	}
 
 }
@@ -79,7 +79,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				return "ERROR_TOKEN";
 		}
 	}
-	return "EOF"
+	return "EOF";
 }
 
 
