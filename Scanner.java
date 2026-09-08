@@ -11,8 +11,8 @@ import java.io.InputStreamReader;
 
 public class Scanner{
 
-	public final boolean Debug = true;	
-	
+	public final boolean Debug = false;	
+		
 	public enum CharType
 	{ LETTER, DIGIT, OPERATORS, PUNC, STR, OTHER};
       	
@@ -21,8 +21,11 @@ public class Scanner{
 	public enum State
 	{ START, BUILDING, ACCEPT, ERR };
 
-	public State next_state[][] =
-	{ {}};
+	public State next_state[][] = //temp 2d array while figuring out input
+	{ {State.BUILDING, State.ERR, State.ERR},
+      {State.BUILDING, State.BUILDING, State.ACCEPT},
+      {State.ACCEPT, State.ACCEPT, State.ACCEPT},
+      {State.ERR, State.ERR, State.ERR}};
 
 	public Scanner()
 	{
@@ -34,25 +37,32 @@ public class Scanner{
 			characterClass[i] = CharType.LETTER;
 		for(int i = '0'; i <= '9'; i++)
                         characterClass[i] = CharType.DIGIT;
-                characterClass[38] = CharType.OPERATORS;
-		characterClass[124] = CharType.OPERATORS;
-		characterClass[94] = CharType.OPERATORS;
-		characterClass[126] = CharType.OPERATORS;
-		characterClass[43] = CharType.OPERATORS;
-		characterClass[45] = CharType.OPERATORS;
-		characterClass[42] = CharType.OPERATORS;
-		characterClass[47] = CharType.OPERATORS;
-		characterClass[60] = CharType.OPERATORS;
-		characterClass[62] = CharType.OPERATORS;
-		characterClass[61] = CharType.OPERATORS;
-		characterClass[33] = CharType.OPERATORS;
-		//characterClass[] = CharType.
+                characterClass[38] = CharType.OPERATORS; //adding &
+		characterClass[124] = CharType.OPERATORS; //adding |
+		characterClass[94] = CharType.OPERATORS; //adding ^
+		characterClass[126] = CharType.OPERATORS; //adding ~
+		characterClass[43] = CharType.OPERATORS; //adding +
+		characterClass[45] = CharType.OPERATORS; //adding -
+		characterClass[42] = CharType.OPERATORS; //adding *
+		characterClass[47] = CharType.OPERATORS; //adding /
+		characterClass[60] = CharType.OPERATORS; //adding <
+		characterClass[62] = CharType.OPERATORS; //adding >
+		characterClass[61] = CharType.OPERATORS; //adding =
+		characterClass[33] = CharType.OPERATORS; //adding !
+		characterClass[40] = CharType.PUNC; //adding (
+		characterClass[41] = CharType.PUNC; //adding )
+		characterClass[91] = CharType.PUNC; //adding [  
+		characterClass[93] = CharType.PUNC; //adding ]
+		characterClass[123] = CharType.PUNC; //adding {
+		characterClass[125] = CharType.PUNC; //adding }
 	}
+	public ArrayList<String> restricted = new ArrayList<String>(
+		Arrays.asList("int", "boolean", "String", "char"));
 
-}
+
 public String getToken (java.io.Reader reader) throws java.io.IOException
 {
-	State state = State.Start;
+	State state = State.START;
 	int c = reader.read();
 
 	String lexeme = "";
@@ -60,6 +70,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 	while (-1 != c)
 	{
 		CharType charClass = characterClass[c];
+
 		if (Debug) System.out.print ("state = " + state + ", class = " + charClass);
 		state = next_state[state.ordinal() ][charClass.ordinal() ];
 		if (Debug) System.out.println (" ==> state = " + state);
@@ -67,6 +78,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 		{
 			case BUILDING:
 				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
 				c = reader.read();
 				break;
 			case ACCEPT:
@@ -81,7 +93,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 	}
 	return "EOF";
 }
-
+}
 
 
 public static void main(String[] args) throws java.io.IOException
@@ -100,3 +112,4 @@ public static void main(String[] args) throws java.io.IOException
         }
         while (!token.equals ("EOF"));
 }
+
