@@ -14,12 +14,12 @@ public class Scanner{
 	public final boolean Debug = false;	
 		
 	public enum CharType
-	{ LETTER, DIGIT, OPERATORS, PUNC, STR, OTHER};
+	{ LETTER, DIGIT, OPERATORS, PUNC, QUOTE, COMMENT, OTHER};
       	
 	public CharType characterClass[] = new CharType[256];
 
 	public enum State
-	{ START, BUILDING, ACCEPT, ERR };
+	{ START, ALPHA-BUILDING, ALPHA-ACCEPT, QUOTE-BUILDING, QUOTE-ACCEPT, INT-BUILDING, INT-ACCEPT, HEX-BUILDING, HEX-ACCEPT, OCT-BUILDING, OCT-ACCEPT, OP-BUILDING, OP-ACCEPT, COMMENT-BUILDING, SINGLE-COMMENT, MULTI-COMMENT, COMMENT-ACCPET, ERR };
 
 	public State next_state[][] = //temp 2d array while figuring out input
 	{ {State.BUILDING, State.ERR, State.ERR},
