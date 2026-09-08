@@ -19,7 +19,7 @@ public class Scanner{
 	public CharType characterClass[] = new CharType[256];
 
 	public enum State
-	{ START, ALPHA-BUILDING, ALPHA-ACCEPT, QUOTE-BUILDING, QUOTE-ACCEPT, INT-BUILDING, INT-ACCEPT, HEX-BUILDING, HEX-ACCEPT, OCT-BUILDING, OCT-ACCEPT, OP-BUILDING, OP-ACCEPT, COMMENT-BUILDING, SINGLE-COMMENT, MULTI-COMMENT, COMMENT-ACCPET, ERR };
+	{ START, ALPHA_BUILDING, ALPHA_ACCEPT, QUOTE_BUILDING, QUOTE_ACCEPT, INT_BUILDING, INT_ACCEPT, HEX_BUILDING, HEX_ACCEPT, OCT_BUILDING, OCT_ACCEPT, OP_BUILDING, OP_ACCEPT, COMMENT_BUILDING, SINGLE_COMMENT, MULTI_COMMENT, COMMENT_ACCPET, ERR };
 
 	public State next_state[][] = //temp 2d array while figuring out input
 	{ {State.BUILDING, State.ERR, State.ERR},
@@ -76,13 +76,46 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 		if (Debug) System.out.println (" ==> state = " + state);
 		switch (state)
 		{
-			case BUILDING:
+			case ALPHA_BUILDING:
 				lexeme = lexeme + (char) c;
 				if (Debug) System.out.println("Currentl reading" + c);
 				c = reader.read();
 				break;
-			case ACCEPT:
+			case ALPHA_ACCEPT:
 				return "ID(" + lexeme + ")";
+			case QUOTE_BUILDING:
+				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
+			case QUOTE_ACCEPT:
+				return "STRING_LITERAL(" + lexeme + ")";
+			case INT_BUILDING:
+				lexeme = lexeme + (char) c;
+ 				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
+			case INT_ACCEPT:
+				return "INTEGER_LITERAL(" + lexeme + ")";
+			case HEX_BUILDING:
+				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
+			case HEX_ACCEPT:
+				return "HEXADECIMAL_LITERAL(" + lexeme + ")";
+			case OCT_BUILDING:
+				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
+			case OCT_ACCEPT:
+				return "OCTAL_LITERAL(" + lexeme + ")";
+			case OP_BUILDING:
+				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
 			case ERR:
 				//Temp message will need to put out required Error
 				return "ERROR_TOKEN";
@@ -99,15 +132,14 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 public static void main(String[] args) throws java.io.IOException
 {
 	java.io.Reader reader = null;
-        Recognizer r = new Recognizer ();
+        Scanner s = new Scanner();
 
-        reader =
-            new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
+        reader = new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
 
         String token;
         do
         {
-            token = r.getToken (reader);
+            token = s.getToken (reader);
             System.out.println (token);
         }
         while (!token.equals ("EOF"));
