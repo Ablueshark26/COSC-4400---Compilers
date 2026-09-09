@@ -21,7 +21,7 @@ public class Scanner{
 	public enum State
 	{ START, ALPHA_BUILDING, ALPHA_ACCEPT, QUOTE_BUILDING, QUOTE_ACCEPT, QUOTE_ERR, ZERO, INT_BUILDING, INT_ACCEPT, HEX_BUILDING, HEX_ACCEPT, OCT_BUILDING, OCT_ACCEPT, OP_BUILDING, OP_ACCEPT, PUNC_ACCEPT, COMMENT_BUILDING, SINGLE_COMMENT, MULTI_COMMENT, COMMENT_ACCPET, ERR };
 
-	public State next_state[][] = new State[State.valuess().length][CharType.values().length];//Array will be size of states by chartypes
+	public State next_state[][] = new State[State.values().length][CharType.values().length];//Array will be size of states by chartypes
 
 	public Scanner()
 	{
