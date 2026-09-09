@@ -35,8 +35,8 @@ public class Scanner{
                         characterClass[i] = CharType.LETTER_HEX;
                 for(int i = 'a'; i <= 'f'; i++)
                         characterClass[i] = CharType.LETTER_HEX;	
-		characterClass['x'] = charType.LETTER_X;
-                characterClass['X'] = charType.LETTER_X;
+		characterClass['x'] = CharType.LETTER_X;
+                characterClass['X'] = CharType.LETTER_X;
 
 		for(int i = '1'; i <= '7'; i++)
                         characterClass[i] = CharType.DIGIT_OCT;
