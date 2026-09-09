@@ -298,13 +298,13 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				int numErr = 0;
 				for (int i = 0; i < lexeme.length(); i++){
 					if(!Character.isDigit(lexeme.charAt(i))){
-						if(lexeme.charAt(0) == '0'){
-							numErr = 2;
-						}
-						else if(lexeme.substring(0,2) == "0x"){
+						if(lexeme.substring(0,2) == "0x"){
 							numErr = 1;
 						}
-						else{
+						else if(lexeme.charAt(0) == '0'){
+							numErr = 2;
+						}
+						else if(lexeme.charAt(0) != '0'){
 							numErr = 3;
 						}
 					}
