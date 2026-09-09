@@ -116,6 +116,52 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				if (Debug) System.out.println("Currentl reading" + c);
 				c = reader.read();
 				break;
+			case OP_ACCEPT:
+				if(lexeme == "&&"){
+					return "AND";
+				}
+				else if (lexeme == "||"){
+					return "OR";
+				}
+				else if (lexeme == "&"){
+					return "BWAND";
+				}
+				else if (lexeme == "|"){
+					return "BWOR";
+				}
+				else if (lexeme == "^"){
+					return "XOR";
+				}
+				else if (lexeme == "~"){
+					return "COMP";
+				}
+				else if (lexeme == "+"){
+					return "PLUS";
+				}
+				else if (lexeme == "-"){
+					return "MINUS";
+				}
+				else if (lexeme == "*"){
+					return "STAR";
+				}
+				else if (lexeme == "/"){
+					return "FORWARDSLASH";
+				}
+				else if (lexeme == "<"){
+					return "LESSTHAN";
+				}
+				else if (lexeme == ">"){
+					return "GREATERTHAN";
+				}
+				else if (lexeme == "=="){
+					return "EQUAL";
+				}
+				else if (lexeme == "!="){
+					return "NOTEQUAL";
+				}
+				else if (lexeme == "!"){
+					return "BANG";
+				}
 			case ERR:
 				//Temp message will need to put out required Error
 				return "ERROR_TOKEN";
