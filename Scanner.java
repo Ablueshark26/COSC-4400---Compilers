@@ -268,7 +268,24 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				
 			case ERR:
 				//Temp message will need to put out required Error
-				return "ERROR_TOKEN";
+				if(){
+					return "Comment not terminated at end of input";
+				}
+				else if(){
+					return "Invalid character in hex number.";
+				}
+				else if(){
+					return "Invalid character in octal number.";
+				}
+				else if(){
+					return "Invalid character in number.";
+				}
+				else if(){
+					return "String not terminated at end of line.";
+				}
+				else{
+					return "Illegal token.";
+				}
 			default:
 				System.err.println("ERROR: Reached wrong state " + state);
 				return "ERROR_TOKEN";
