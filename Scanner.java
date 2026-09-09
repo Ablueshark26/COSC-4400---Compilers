@@ -8,6 +8,7 @@
  */
 import java.io.BufferedReader;                  
 import java.io.InputStreamReader;      
+import java.util.*;
 
 public class Scanner{
 
@@ -74,8 +75,7 @@ public class Scanner{
 
 
 	}
-	public ArrayList<String> restricted = new ArrayList<String>(
-		Arrays.asList("int", "boolean", "String", "char"));
+	public ArrayList<String> restricted = new ArrayList<String>(Arrays.asList("int", "boolean", "String", "char"));
 
 
 public String getToken (java.io.Reader reader) throws java.io.IOException
@@ -337,22 +337,22 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 	}
 	return "EOF";
 }
+
+
+
+	public static void main(String[] args) throws java.io.IOException
+	{
+		java.io.Reader reader = null;
+        	Scanner s = new Scanner();
+
+        	reader = new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
+
+        	String token;
+        	do
+        	{
+            		token = s.getToken (reader);
+            		System.out.println (token);
+        	}
+        	while (!token.equals ("EOF"));
+	}	
 }
-
-
-public static void main(String[] args) throws java.io.IOException
-{
-	java.io.Reader reader = null;
-        Scanner s = new Scanner();
-
-        reader = new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
-
-        String token;
-        do
-        {
-            token = s.getToken (reader);
-            System.out.println (token);
-        }
-        while (!token.equals ("EOF"));
-}
-
