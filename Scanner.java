@@ -295,7 +295,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
                                 break;
 			case ERR:
 				//Temp message will need to put out required Error
-				int numErr = 0
+				int numErr = 0;
 				for (int i = 0; i < lexeme.length(); i++){
 					if(!Character.isDigit(lexeme.charAt(i))){
 						if(lexeme.charAt(0) == "0"){
