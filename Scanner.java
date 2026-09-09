@@ -1,6 +1,6 @@
 /**
  * COSC 4400 - Project #1
- * Explain briefly the functionality of the program.
+ * This program reads an input line of characters and outputs the tokens in order
  * @authors Luke Sam 
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu 
@@ -204,6 +204,9 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if (lexeme == "."){
 					return "PERIOD";
 				}
+				else if (lexeme == ";"){
+					return "SEMICOLON";
+				}
 				else if (lexeme.toLowerCase() == "class"){
 					return "CLASS";
 				}
@@ -292,6 +295,12 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
                                 break;
 			case ERR:
 				//Temp message will need to put out required Error
+				int numErr = 0
+				for (int i = 0; i < lexeme.length(); i++){
+					if(!Character.isDigit(lexeme.charAt(i))){
+						
+					}
+				}
 				if(){
 					return "Comment not terminated at end of input";
 				}
@@ -304,10 +313,8 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if(){
 					return "Invalid character in number.";
 				}
-				else if(){
-					 lexme =  lexme + (char) c;
-                                c = reader.read();
-                                break;return "String not terminated at end of line.";
+				else if((lexeme.substring(0,1) == '"') && (lexeme.substring(lexeme.length()) != '"')){
+					return "String not terminated at end of line.";
 				}
 				else{
 					return "Illegal token.";
