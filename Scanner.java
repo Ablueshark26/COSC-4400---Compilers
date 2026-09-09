@@ -14,47 +14,65 @@ public class Scanner{
 	public final boolean Debug = false;	
 		
 	public enum CharType
-	{ LETTER, DIGIT, OPERATORS, PUNC, QUOTE, COMMENT, OTHER};
+	{ LETTER_HEX, LETTER_X, LETTERS, DIGIT_ZERO, DIGIT_OCT, DIGITS, OP_STAR, OP_OR, OP_AND, OP_EQUAL, OP_EXC, OPERATORS, PUNC, QUOTE, COMMENT, SPACE, NEWLINE, OTHER};
       	
 	public CharType characterClass[] = new CharType[256];
 
 	public enum State
-	{ START, ALPHA_BUILDING, ALPHA_ACCEPT, QUOTE_BUILDING, QUOTE_ACCEPT, INT_BUILDING, INT_ACCEPT, HEX_BUILDING, HEX_ACCEPT, OCT_BUILDING, OCT_ACCEPT, OP_BUILDING, OP_ACCEPT, COMMENT_BUILDING, SINGLE_COMMENT, MULTI_COMMENT, COMMENT_ACCPET, ERR };
+	{ START, ALPHA_BUILDING, ALPHA_ACCEPT, QUOTE_BUILDING, QUOTE_ACCEPT, QUOTE_ERR, ZERO, INT_BUILDING, INT_ACCEPT, HEX_BUILDING, HEX_ACCEPT, OCT_BUILDING, OCT_ACCEPT, OP_BUILDING, OP_ACCEPT, PUNC_ACCEPT, COMMENT_BUILDING, SINGLE_COMMENT, MULTI_COMMENT, COMMENT_ACCPET, ERR };
 
-	public State next_state[][] = //temp 2d array while figuring out input
-	{ {State.BUILDING, State.ERR, State.ERR},
-      {State.BUILDING, State.BUILDING, State.ACCEPT},
-      {State.ACCEPT, State.ACCEPT, State.ACCEPT},
-      {State.ERR, State.ERR, State.ERR}};
+	public State next_state[][] = new State[State.valuess().length][CharType.values().length];//Array will be size of states by chartypes
 
 	public Scanner()
 	{
 		for(int i = 0; i < characterClass.length; i++)
 			characterClass[i] = CharType.OTHER;
 		for(int i = 'A'; i <= 'Z'; i++)
-			characterClass[i] = CharType.LETTER;
+			characterClass[i] = CharType.LETTERS;
 		for(int i = 'a'; i <= 'z'; i++)
-			characterClass[i] = CharType.LETTER;
-		for(int i = '0'; i <= '9'; i++)
-                        characterClass[i] = CharType.DIGIT;
-                characterClass[38] = CharType.OPERATORS; //adding &
-		characterClass[124] = CharType.OPERATORS; //adding |
-		characterClass[94] = CharType.OPERATORS; //adding ^
-		characterClass[126] = CharType.OPERATORS; //adding ~
-		characterClass[43] = CharType.OPERATORS; //adding +
-		characterClass[45] = CharType.OPERATORS; //adding -
-		characterClass[42] = CharType.OPERATORS; //adding *
-		characterClass[47] = CharType.OPERATORS; //adding /
-		characterClass[60] = CharType.OPERATORS; //adding <
-		characterClass[62] = CharType.OPERATORS; //adding >
-		characterClass[61] = CharType.OPERATORS; //adding =
-		characterClass[33] = CharType.OPERATORS; //adding !
-		characterClass[40] = CharType.PUNC; //adding (
-		characterClass[41] = CharType.PUNC; //adding )
-		characterClass[91] = CharType.PUNC; //adding [  
-		characterClass[93] = CharType.PUNC; //adding ]
-		characterClass[123] = CharType.PUNC; //adding {
-		characterClass[125] = CharType.PUNC; //adding }
+			characterClass[i] = CharType.LETTERS;
+		for(int i = 'A'; i <= 'F'; i++)
+                        characterClass[i] = CharType.LETTER_HEX;
+                for(int i = 'a'; i <= 'f'; i++)
+                        characterClass[i] = CharType.LETTER_HEX;	
+		characterClass['x'] = charType.LETTER_X;
+                characterClass['X'] = charType.LETTER_X;
+
+		for(int i = '1'; i <= '7'; i++)
+                        characterClass[i] = CharType.DIGIT_OCT;
+		characterClass['0'] = CharType.DIGIT_ZERO;
+                characterClass['8'] = CharType.DIGITS;
+                characterClass['9'] = CharType.DIGITS;
+		
+
+		characterClass['&'] = CharType.OP_AND;
+		characterClass['|'] = CharType.OP_OR;
+		characterClass['/'] = CharType.COMMENT;
+		characterClass['*'] = CharType.OP_STAR;
+		characterClass['='] = CharType.OP_EQUAL;
+		characterClass['!'] = CharType.OP_EXC;
+		characterClass['"'] = CharType.QUOTE;
+		characterClass['^'] = CharType.OPERATORS;
+		characterClass['~'] = CharType.OPERATORS;
+		characterClass['+'] = CharType.OPERATORS;
+		characterClass['-'] = CharType.OPERATORS;
+		characterClass['<'] = CharType.OPERATORS;
+		characterClass['>'] = CharType.OPERATORS;
+		characterClass['('] = CharType.PUNC;
+        	characterClass[')'] = CharType.PUNC;
+        	characterClass['['] = CharType.PUNC;
+        	characterClass[']'] = CharType.PUNC;
+        	characterClass['{'] = CharType.PUNC;
+        	characterClass['}'] = CharType.PUNC;
+        	characterClass[','] = CharType.PUNC;
+        	characterClass['.'] = CharType.PUNC;
+        	characterClass[';'] = CharType.PUNC;
+                characterClass[' '] = CharType.SPACE;
+                characterClass['\t'] = CharType.SPACE;
+                characterClass['\n'] = CharType.NEWLINE;
+
+
+
 	}
 	public ArrayList<String> restricted = new ArrayList<String>(
 		Arrays.asList("int", "boolean", "String", "char"));
@@ -261,11 +279,17 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				c = reader.read();
 				break;
 			case SINGLE_COMMENT:
-				
+				lexme =  lexme + (char) c;
+				c = reader.read();
+				break;
 			case MULTI_COMMENT:
-
+				lexme =  lexme + (char) c;
+                                c = reader.read();
+                                break;	
 			case COMMENT_ACCEPT:
-				
+				lexme =  lexme + (char) c;
+                                c = reader.read();
+                                break;
 			case ERR:
 				//Temp message will need to put out required Error
 				if(){
@@ -281,7 +305,9 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 					return "Invalid character in number.";
 				}
 				else if(){
-					return "String not terminated at end of line.";
+					 lexme =  lexme + (char) c;
+                                c = reader.read();
+                                break;return "String not terminated at end of line.";
 				}
 				else{
 					return "Illegal token.";
