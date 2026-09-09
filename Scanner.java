@@ -162,6 +162,110 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if (lexeme == "!"){
 					return "BANG";
 				}
+				else if (lexeme == "("){
+					return "LPAREN";
+				}
+				else if (lexeme == ")"){
+					return "RPAREN";
+				}
+				else if (lexeme == "["){
+					return "LSQUARE";
+				}
+				else if (lexeme == "]"){
+					return "RSQUARE";
+				}
+				else if (lexeme == "{"){
+					return "LBRACE";
+				}
+				else if (lexeme == "}"){
+					return "RBRACE";
+				}
+				else if (lexeme == ","){
+					return "COMMA";
+				}
+				else if (lexeme == "."){
+					return "PERIOD";
+				}
+				else if (lexeme.toLowerCase() == "class"){
+					return "CLASS";
+				}
+				else if (lexeme.toLowerCase() == "public"){
+					return "PUBLIC";
+				}
+				else if (lexeme.toLowerCase() == "stadic"){
+					return "STADIC";
+				}
+				else if (lexeme.toLowerCase() == "void"){
+					return "VOID";
+				}
+				else if (lexeme.toLowerCase() == "main"){
+					return "MAIN";
+				}
+				else if (lexeme.toLowerCase() == "string"){
+					return "STRING";
+				}
+				else if (lexeme.toLowerCase() == "extends"){
+					return "EXTENDS";
+				}
+				else if (lexeme.toLowerCase() == "return"){
+					return "RETURN";
+				}
+				else if (lexeme.toLowerCase() == "int"){
+					return "INT";
+				}
+				else if (lexeme.toLowerCase() == "double"){
+					return "DOUBLE";
+				}
+				else if (lexeme.toLowerCase() == "boolean"){
+					return "BOOLEAN";
+				}
+				else if (lexeme.toLowerCase() == "if"){
+					return "IF";
+				}
+				else if (lexeme.toLowerCase() == "while"){
+					return "WHILE";
+				}
+				else if (lexeme == "System.out.print"){
+					return "SYSTEM.OUT.PRINT";
+				}
+				else if (lexeme.toLowerCase() == "length"){
+					return "LENGTH";
+				}
+				else if (lexeme.toLowerCase() == "true"){
+					return "TRUE";
+				}
+				else if (lexeme.toLowerCase() == "false"){
+					return "FALSE";
+				}
+				else if (lexeme.toLowerCase() == "this"){
+					return "THIS";
+				}
+				else if (lexeme.toLowerCase() == "new"){
+					return "NEW";
+				}
+				else if (lexeme == "Xinu.print"){
+					return "PRINT";
+				}
+				else if (lexeme == "Xinu.println"){
+					return "PRINTLN";
+				}
+				else if (lexeme == "Xinu.printint"){
+					return "PRINTINT";
+				}
+				else if (lexeme == "Xinu.readint"){
+					return "READINT";
+				}
+			case COMMENT_BUILDING:
+				lexeme = lexeme + (char) c;
+				if (Debug) System.out.println("Currentl reading" + c);
+				c = reader.read();
+				break;
+			case SINGLE_COMMENT:
+				
+			case MULTI_COMMENT:
+
+			case COMMENT_ACCEPT:
+				
 			case ERR:
 				//Temp message will need to put out required Error
 				return "ERROR_TOKEN";
