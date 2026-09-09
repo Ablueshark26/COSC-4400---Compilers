@@ -282,15 +282,15 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				c = reader.read();
 				break;
 			case SINGLE_COMMENT:
-				lexeme =  lexme + (char) c;
+				lexeme =  lexeme + (char) c;
 				c = reader.read();
 				break;
 			case MULTI_COMMENT:
-				lexeme =  lexme + (char) c;
+				lexeme =  lexeme + (char) c;
                                 c = reader.read();
                                 break;	
 			case COMMENT_ACCEPT:
-				lexeme =  lexme + (char) c;
+				lexeme =  lexeme + (char) c;
                                 c = reader.read();
                                 break;
 			case ERR:
