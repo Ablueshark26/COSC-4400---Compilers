@@ -171,6 +171,9 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if (lexeme == ">"){
 					return "GREATERTHAN";
 				}
+				else if (lexeme == "="){
+					return "ASSIGN";
+				}
 				else if (lexeme == "=="){
 					return "EQUAL";
 				}
