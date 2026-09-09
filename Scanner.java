@@ -298,22 +298,30 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				int numErr = 0
 				for (int i = 0; i < lexeme.length(); i++){
 					if(!Character.isDigit(lexeme.charAt(i))){
-						
+						if(lexeme.charAt(0) == "0"){
+							numErr = 2;
+						}
+						else if(lexeme.substring(0,2) == "0x"){
+							numErr = 1;
+						}
+						else{
+							numErr = 3;
+						}
 					}
 				}
-				if(){
+				if((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
 					return "Comment not terminated at end of input";
 				}
-				else if(){
+				else if(numErr == 1){
 					return "Invalid character in hex number.";
 				}
-				else if(){
+				else if(numErr == 2){
 					return "Invalid character in octal number.";
 				}
-				else if(){
+				else if(numErr == 3){
 					return "Invalid character in number.";
 				}
-				else if((lexeme.substring(0,1) == '"') && (lexeme.substring(lexeme.length()) != '"')){
+				else if((lexeme.charAt(0) == '"') && (lexeme.charAt(lexeme.length()-1) != '"')){
 					return "String not terminated at end of line.";
 				}
 				else{
