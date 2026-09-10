@@ -122,8 +122,6 @@ public class Scanner{
 
 
 	}
-	public ArrayList<String> restricted = new ArrayList<String>(Arrays.asList("int", "boolean", "String", "char"));
-
 
 public String getToken (java.io.Reader reader) throws java.io.IOException
 {
@@ -142,46 +140,171 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 		switch (state)
 		{
 			case ALPHA_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case ALPHA_ACCEPT:
-				return "ID(" + lexeme + ")";
 			case QUOTE_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case QUOTE_ACCEPT:
-				return "STRING_LITERAL(" + lexeme + ")";
+			case ZERO:
 			case INT_BUILDING:
-				lexeme = lexeme + (char) c;
- 				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case INT_ACCEPT:
-				return "INTEGER_LITERAL(" + lexeme + ")";
 			case HEX_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case HEX_ACCEPT:
-				return "HEXADECIMAL_LITERAL(" + lexeme + ")";
 			case OCT_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
+			case INT_ERR:
+			case HEX_ERR:
+			case OCT_ERR:
+			case OP_AND:
+			case OP_OR:
+			case OP_EQUAL:
+			case OP_EXC:
+			case COMMENT:
+			    lexeme.append((char) c); //builders read + store
+			    c = reader.read();
+			    break;
+			case SINGLE_COMMENT:
+			case MULTI_COMMENT:
+				c = reader.read(); //reads but doesn't store
 				break;
-			case OCT_ACCEPT:
-				return "OCTAL_LITERAL(" + lexeme + ")";
-			case OP_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
+
 			case OP_ACCEPT:
+				lexme.append((char) c);
+				return solve(state, lexme) //solves op inpu
+			
+			case ALPHA_ACCEPT:
+			case INT_ACCEPT:
+			case HEX_ACCEPT:
+			case OCT_ACCEPT:
+			case OP_ONE_ACCEPT:
+				reader.unread(c);
+				if (lexeme.toLowerCase() == "class"){
+					return "CLASS";
+				return solve(state, lexme)
+			
+			case ERR:
+				//Temp message will need to put out required Error
+				int numErr = 0;
+				for (int i = 0; i < lexeme.length(); i++){
+					if(!Character.isDigit(lexeme.charAt(i))){
+						if(lexeme.substring(0,2) == "0x"){
+							numErr = 1;
+						}
+						else if(lexeme.charAt(0) == '0'){
+							numErr = 2;
+						}
+						else if(lexeme.charAt(0) != '0'){
+							numErr = 3;
+						}
+					}
+				
+				}f((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
+					return "Comment not terminated at end of input";
+				}
+				else if(numErr == 1){
+					return "Invalid character in hex number.";
+				}
+				else if(numErr == 2){
+					return "Invalid character in octal number.";
+				}
+				else if(numErr == 3){
+					return "Invalid character in number.";
+				}
+				else if((lexeme.charAt(0) == '"') && (lexeme.charAt(lexeme.length()-1) != '"')){
+					return "String not terminated at end of line.";
+				}
+				else{
+					return "Illegal token.";
+				}
+			default:
+				System.err.println("ERROR: Reached wrong state " + state);
+				return "ERROR_TOKEN";
+		}
+	}
+	return "EOF";
+}
+public String keywords(String lexme)
+{
+				if (lexeme.toLowerCase() == "class"){
+					return "CLASS";
+				}
+				else if (lexeme.toLowerCase() == "public"){
+					return "PUBLIC";
+				}
+				else if (lexeme.toLowerCase() == "stadic"){
+					return "STADIC";
+				}
+				else if (lexeme.toLowerCase() == "void"){
+					return "VOID";
+				}
+				else if (lexeme.toLowerCase() == "main"){
+					return "MAIN";
+				}
+				else if (lexeme.toLowerCase() == "string"){
+					return "STRING";
+				}
+				else if (lexeme.toLowerCase() == "extends"){
+					return "EXTENDS";
+				}
+				else if (lexeme.toLowerCase() == "return"){
+					return "RETURN";
+				}
+				else if (lexeme.toLowerCase() == "int"){
+					return "INT";
+				}
+				else if (lexeme.toLowerCase() == "double"){
+					return "DOUBLE";
+				}
+				else if (lexeme.toLowerCase() == "boolean"){
+					return "BOOLEAN";
+				}
+				else if (lexeme.toLowerCase() == "if"){
+					return "IF";
+				}
+				else if (lexeme.toLowerCase() == "while"){
+					return "WHILE";
+				}
+				else if (lexeme == "System.out.print"){
+					return "SYSTEM.OUT.PRINT";
+				}
+				else if (lexeme.toLowerCase() == "length"){
+					return "LENGTH";
+				}
+				else if (lexeme.toLowerCase() == "true"){
+					return "TRUE";
+				}
+				else if (lexeme.toLowerCase() == "false"){
+					return "FALSE";
+				}
+				else if (lexeme.toLowerCase() == "this"){
+					return "THIS";
+				}
+				else if (lexeme.toLowerCase() == "new"){
+					return "NEW";
+				}
+				else if (lexeme == "Xinu.print"){
+					return "PRINT";
+				}
+				else if (lexeme == "Xinu.println"){
+					return "PRINTLN";
+				}
+				else if (lexeme == "Xinu.printint"){
+					return "PRINTINT";
+				}
+				else if (lexeme == "Xinu.readint"){
+					return "READINT";
+				}
+				else
+					return null;
+}
+
+	public String checker(State state, String lexme)
+{
+	switch(state)
+		case ALPHA_ACCEPT:{ 
+			String alpha = keywords(lexme);
+			if(alpha != null ) return alpha
+			 return lexme;	
+		}
+				
+}
+
+	public String opReader(String lexme)
+{
+
 				if(lexeme == "&&"){
 					return "AND";
 				}
@@ -254,138 +377,12 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if (lexeme == "."){
 					return "PERIOD";
 				}
-				else if (lexeme == ";"){
-					return "SEMICOLON";
-				}
-				else if (lexeme.toLowerCase() == "class"){
-					return "CLASS";
-				}
-				else if (lexeme.toLowerCase() == "public"){
-					return "PUBLIC";
-				}
-				else if (lexeme.toLowerCase() == "stadic"){
-					return "STADIC";
-				}
-				else if (lexeme.toLowerCase() == "void"){
-					return "VOID";
-				}
-				else if (lexeme.toLowerCase() == "main"){
-					return "MAIN";
-				}
-				else if (lexeme.toLowerCase() == "string"){
-					return "STRING";
-				}
-				else if (lexeme.toLowerCase() == "extends"){
-					return "EXTENDS";
-				}
-				else if (lexeme.toLowerCase() == "return"){
-					return "RETURN";
-				}
-				else if (lexeme.toLowerCase() == "int"){
-					return "INT";
-				}
-				else if (lexeme.toLowerCase() == "double"){
-					return "DOUBLE";
-				}
-				else if (lexeme.toLowerCase() == "boolean"){
-					return "BOOLEAN";
-				}
-				else if (lexeme.toLowerCase() == "if"){
-					return "IF";
-				}
-				else if (lexeme.toLowerCase() == "while"){
-					return "WHILE";
-				}
-				else if (lexeme == "System.out.print"){
-					return "SYSTEM.OUT.PRINT";
-				}
-				else if (lexeme.toLowerCase() == "length"){
-					return "LENGTH";
-				}
-				else if (lexeme.toLowerCase() == "true"){
-					return "TRUE";
-				}
-				else if (lexeme.toLowerCase() == "false"){
-					return "FALSE";
-				}
-				else if (lexeme.toLowerCase() == "this"){
-					return "THIS";
-				}
-				else if (lexeme.toLowerCase() == "new"){
-					return "NEW";
-				}
-				else if (lexeme == "Xinu.print"){
-					return "PRINT";
-				}
-				else if (lexeme == "Xinu.println"){
-					return "PRINTLN";
-				}
-				else if (lexeme == "Xinu.printint"){
-					return "PRINTINT";
-				}
-				else if (lexeme == "Xinu.readint"){
-					return "READINT";
-				}
-			case COMMENT_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case SINGLE_COMMENT:
-				lexeme =  lexeme + (char) c;
-				c = reader.read();
-				break;
-			case MULTI_COMMENT:
-				lexeme =  lexeme + (char) c;
-                                c = reader.read();
-                                break;	
-			case COMMENT_ACCEPT:
-				lexeme =  lexeme + (char) c;
-                                c = reader.read();
-                                break;
-			case ERR:
-				//Temp message will need to put out required Error
-				int numErr = 0;
-				for (int i = 0; i < lexeme.length(); i++){
-					if(!Character.isDigit(lexeme.charAt(i))){
-						if(lexeme.substring(0,2) == "0x"){
-							numErr = 1;
-						}
-						else if(lexeme.charAt(0) == '0'){
-							numErr = 2;
-						}
-						else if(lexeme.charAt(0) != '0'){
-							numErr = 3;
-						}
-					}
-				}
-				if((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
-					return "Comment not terminated at end of input";
-				}
-				else if(numErr == 1){
-					return "Invalid character in hex number.";
-				}
-				else if(numErr == 2){
-					return "Invalid character in octal number.";
-				}
-				else if(numErr == 3){
-					return "Invalid character in number.";
-				}
-				else if((lexeme.charAt(0) == '"') && (lexeme.charAt(lexeme.length()-1) != '"')){
-					return "String not terminated at end of line.";
-				}
-				else{
-					return "Illegal token.";
-				}
-			default:
-				System.err.println("ERROR: Reached wrong state " + state);
-				return "ERROR_TOKEN";
-		}
-	}
-	return "EOF";
 }
 
+ public String errorReader(String lexme)
+{
 
+}
 
 	public static void main(String[] args) throws java.io.IOException
 	{
