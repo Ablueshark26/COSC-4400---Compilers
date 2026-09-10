@@ -6,7 +6,8 @@
  * TA-BOT:MAILTO luke.sharba@marquette.edu 
  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
  */
-import java.io.BufferedReader;                  
+import java.io.BufferedReader;   
+import java.io.PushbackReader;
 import java.io.InputStreamReader;      
 import java.util.*;
 
@@ -23,9 +24,10 @@ public class Scanner{
 
 	 public State next_state[][] = 
 {
-			{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ZERO,State.INT_BUILDING,State.INT_BUILDING,State.OP_ACCEPT,State.OP_BUILDING,State.OP_BUILDING,State.OP_BUILDING,State.OP_BUILDING,State.OP_ACCEPT,State.PUNC_ACCEPT,State.QUOTE_BUILDING,State.COMMENT_BUILDING,State.START,State.START,State.ERR }, //START
+	{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ZERO,State.INT_BUILDING,State.INT_BUILDING,State.OP_BASE_ACCEPT,State.OR,State.AND,State.EQUAL,State.EXC,State.OP_BASE_ACCEPT,State.PUNC_ACCEPT,State.QUOTE_BUILDING,State.SLASH,State.START,State.START,State.ERR }, //START 
+	
 
-		{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ERR }, //ALPHA_BUILDING
+	{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ERR }, //ALPHA_BUILDING
 
 		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //ALPHA_ACCEPT
 
@@ -123,7 +125,7 @@ public class Scanner{
 
 	}
 
-public String getToken (java.io.Reader reader) throws java.io.IOException
+public String getToken (PushbackReader reader) throws java.io.IOException
 {
 	State state = State.START;
 	int c = reader.read();
@@ -148,12 +150,12 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 			case INT_ERR:
 			case HEX_ERR:
 			case OCT_ERR:
-			case OP_AND:
-			case OP_OR:
-			case OP_EQUAL:
-			case OP_EXC:
-			case COMMENT:
-			    lexeme.append((char) c); //builders read + store
+			case AND:
+			case OR:
+			case EQUAL:
+			case EXC:
+			case SLASH:
+			    lexeme +=  c; //builders read + store
 			    c = reader.read();
 			    break;
 			case SINGLE_COMMENT:
@@ -161,9 +163,11 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				c = reader.read(); //reads but doesn't store
 				break;
 
-			case OP_ACCEPT:
-				lexme.append((char) c);
-				return solve(state, lexme) //solves op inpu
+			case OP_BASE_ACCEPT:
+			case PUNC_ACCEPT:
+			case OP_TWO_ACCEPT:
+				lexeme += c;
+				return solve(state, lexeme); //solves op inpu
 			
 			case ALPHA_ACCEPT:
 			case INT_ACCEPT:
@@ -171,10 +175,9 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 			case OCT_ACCEPT:
 			case OP_ONE_ACCEPT:
 				reader.unread(c);
-				if (lexeme.toLowerCase() == "class"){
-					return "CLASS";
-				return solve(state, lexme)
-			
+				return solve(state, lexeme);
+			case QUOTE_ACCEPT:
+			      return solve(state, lexeme);
 			case ERR:
 				//Temp message will need to put out required Error
 				int numErr = 0;
@@ -191,7 +194,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 						}
 					}
 				
-				}f((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
+				} if((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
 					return "Comment not terminated at end of input";
 				}
 				else if(numErr == 1){
@@ -216,7 +219,7 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 	}
 	return "EOF";
 }
-public String keywords(String lexme)
+public String keywords(String lexeme)
 {
 				if (lexeme.toLowerCase() == "class"){
 					return "CLASS";
@@ -291,18 +294,31 @@ public String keywords(String lexme)
 					return null;
 }
 
-	public String checker(State state, String lexme)
+	public String solve(State state, String lexeme)
 {
 	switch(state)
-		case ALPHA_ACCEPT:{ 
-			String alpha = keywords(lexme);
-			if(alpha != null ) return alpha
-			 return lexme;	
+	{
+	    case ALPHA_ACCEPT:{ 
+			String alpha = keywords(lexeme);
+			if(alpha != null ) return alpha;
+			 return lexeme;	
 		}
-				
+	    case INT_ACCEPT:         return "INTEGER_LITERAL(" + lexeme + ")";
+            case HEX_ACCEPT:         return "HEXADECIMAL_LITERAL(" + lexeme + ")";
+            case OCT_ACCEPT:         return "OCTAL_LITERAL(" + lexeme + ")";
+            case INT_ERR: return "Invalid character in number.";
+            case HEX_ERR: return "Invalid character in hex number.";
+            case OCT_ERR: return "Invalid character in octal number.";
+            case QUOTE_ACCEPT:       return "STRING_LITERAL(" + lexeme + ")";
+            case DIVDE:      return "FORWARDSLASH";
+            case OP_BASE_ACCEPT:   return opReader(lexeme);
+            case PUNC_ACCEPT:        return opReader(lexeme);
+            case OP_TWO_ACCEPT:
+            case OP_ONE_ACCEPT:      return opReader(lexeme);
+            default:                 return "Illegal token.";	
 }
-
-	public String opReader(String lexme)
+}
+	public String opReader(String lexeme)
 {
 
 				if(lexeme == "&&"){
@@ -377,19 +393,13 @@ public String keywords(String lexme)
 				else if (lexeme == "."){
 					return "PERIOD";
 				}
+				return "ERROR";
 }
-
- public String errorReader(String lexme)
-{
-
-}
-
 	public static void main(String[] args) throws java.io.IOException
 	{
-		java.io.Reader reader = null;
+		PushbackReader reader = new PushbackReader(new BufferedReader(new InputStreamReader(System.in)), 16);
         	Scanner s = new Scanner();
 
-        	reader = new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
 
         	String token;
         	do
