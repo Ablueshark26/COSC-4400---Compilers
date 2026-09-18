@@ -6,7 +6,8 @@
  * TA-BOT:MAILTO luke.sharba@marquette.edu 
  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
  */
-import java.io.BufferedReader;                  
+import java.io.BufferedReader;   
+import java.io.PushbackReader;
 import java.io.InputStreamReader;      
 import java.util.*;
 
@@ -19,13 +20,14 @@ public class Scanner{
       	
 	public CharType characterClass[] = new CharType[256];
 
-	public enum State{START,ALPHA_BUILDING,ALPHA_ACCEPT,QUOTE_BUILDING,QUOTE_ACCEPT,QUOTE_ERR,ZERO, INT_BUILDING,INT_ACCEPT,INT_ERR,HEX_BUILDING,HEX_ACCEPT,HEX_ERR,OCT_BUILDING,OCT_ACCEPT,OCT_ERR,OP_BUILDING,OP_ACCEPT,PUNC_ACCEPT,COMMENT_BUILDING,SINGLE_COMMENT,MULTI_COMMENT,COMMENT_ACCEPT,ERR};
+	public enum State {START,ALPHA_BUILDING,ALPHA_ACCEPT,QUOTE_BUILDING,QUOTE_ACCEPT,QUOTE_ERR,ZERO,INT_BUILDING,INT_ACCEPT,INT_ERR,HEX_BUILDING,HEX_ACCEPT,HEX_ERR,OCT_BUILDING,OCT_ACCEPT,OCT_ERR,AND,OR,EXC,EQUAL,OP_ONE_ACCEPT,OP_TWO_ACCEPT,OP_BASE_ACCEPT,PUNC_ACCEPT,DIVDE,SLASH,SINGLE_COMMENT,MULTI_COMMENT,MULTI_COMMENT_STAR,COMMENT_ACCEPT,ERR };
 
 	 public State next_state[][] = 
 {
-			{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ZERO,State.INT_BUILDING,State.INT_BUILDING,State.OP_ACCEPT,State.OP_BUILDING,State.OP_BUILDING,State.OP_BUILDING,State.OP_BUILDING,State.OP_ACCEPT,State.PUNC_ACCEPT,State.QUOTE_BUILDING,State.COMMENT_BUILDING,State.START,State.START,State.ERR }, //START
+	{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ZERO,State.INT_BUILDING,State.INT_BUILDING,State.OP_BASE_ACCEPT,State.OR,State.AND,State.EQUAL,State.EXC,State.OP_BASE_ACCEPT,State.PUNC_ACCEPT,State.QUOTE_BUILDING,State.SLASH,State.START,State.START,State.ERR }, //START 
+	
 
-		{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ERR }, //ALPHA_BUILDING
+	{State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_BUILDING,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ALPHA_ACCEPT,State.ERR }, //ALPHA_BUILDING
 
 		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //ALPHA_ACCEPT
 
@@ -55,21 +57,21 @@ public class Scanner{
 
 		{State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR,State.OCT_ERR}, //OCT_ERR
 
-		{State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.OP_ACCEPT,State.ERR }, //OP_BUILDING
+		{State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_TWO_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT}, //AND
 
-		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //OP_ACCEPT
+		{State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_TWO_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT}, //OR
 
-		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //PUNC_ACCEPT
+		{State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_TWO_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT}, //EXC
 
-		{State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.MULTI_COMMENT,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.OP_ACCEPT ,State.SINGLE_COMMENT,State.OP_ACCEPT ,State.OP_ACCEPT ,State.ERR }, //COMMENT_BUILDING
+		{State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_TWO_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT,State.OP_ONE_ACCEPT}, //EQUAL
 
-		{State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.SINGLE_COMMENT,State.COMMENT_ACCEPT,State.SINGLE_COMMENT}, //SINGLE_COMMENT
+		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //OP_ONE_ACCEPT
 
-		{State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.COMMENT_ACCEPT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.MULTI_COMMENT,State.ERR }, //MULTI_COMMENT
+		{State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR}, //OP_TWO_ACCEPT
 
-		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR }, //COMMENT_ACCEPT
+		{State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR}, //OP_BASE_ACCEPT
 
-		{State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR,State.ERR} //ERR 
+		{State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR ,State.ERR } //PUNC_ACCEPT 
 };
 	public Scanner()
 	{
@@ -122,10 +124,8 @@ public class Scanner{
 
 
 	}
-	public ArrayList<String> restricted = new ArrayList<String>(Arrays.asList("int", "boolean", "String", "char"));
 
-
-public String getToken (java.io.Reader reader) throws java.io.IOException
+public String getToken (PushbackReader reader) throws java.io.IOException
 {
 	State state = State.START;
 	int c = reader.read();
@@ -142,46 +142,185 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 		switch (state)
 		{
 			case ALPHA_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case ALPHA_ACCEPT:
-				return "ID(" + lexeme + ")";
 			case QUOTE_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case QUOTE_ACCEPT:
-				return "STRING_LITERAL(" + lexeme + ")";
+			case ZERO:
 			case INT_BUILDING:
-				lexeme = lexeme + (char) c;
- 				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case INT_ACCEPT:
-				return "INTEGER_LITERAL(" + lexeme + ")";
 			case HEX_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case HEX_ACCEPT:
-				return "HEXADECIMAL_LITERAL(" + lexeme + ")";
 			case OCT_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
+			case INT_ERR:
+			case HEX_ERR:
+			case OCT_ERR:
+			case AND:
+			case OR:
+			case EQUAL:
+			case EXC:
+			case SLASH:
+			    lexeme +=  c; //builders read + store
+			    c = reader.read();
+			    break;
+			case SINGLE_COMMENT:
+			case MULTI_COMMENT:
+				c = reader.read(); //reads but doesn't store
 				break;
+
+			case OP_BASE_ACCEPT:
+			case PUNC_ACCEPT:
+			case OP_TWO_ACCEPT:
+				lexeme += c;
+				return solve(state, lexeme); //solves op inpu
+			
+			case ALPHA_ACCEPT:
+			case INT_ACCEPT:
+			case HEX_ACCEPT:
 			case OCT_ACCEPT:
-				return "OCTAL_LITERAL(" + lexeme + ")";
-			case OP_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case OP_ACCEPT:
+			case OP_ONE_ACCEPT:
+				reader.unread(c);
+				return solve(state, lexeme);
+			case QUOTE_ACCEPT:
+			      return solve(state, lexeme);
+			case ERR:
+				//Temp message will need to put out required Error
+				int numErr = 0;
+				for (int i = 0; i < lexeme.length(); i++){
+					if(!Character.isDigit(lexeme.charAt(i))){
+						if(lexeme.substring(0,2) == "0x"){
+							numErr = 1;
+						}
+						else if(lexeme.charAt(0) == '0'){
+							numErr = 2;
+						}
+						else if(lexeme.charAt(0) != '0'){
+							numErr = 3;
+						}
+					}
+				
+				} if((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
+					return "Comment not terminated at end of input";
+				}
+				else if(numErr == 1){
+					return "Invalid character in hex number.";
+				}
+				else if(numErr == 2){
+					return "Invalid character in octal number.";
+				}
+				else if(numErr == 3){
+					return "Invalid character in number.";
+				}
+				else if((lexeme.charAt(0) == '"') && (lexeme.charAt(lexeme.length()-1) != '"')){
+					return "String not terminated at end of line.";
+				}
+				else{
+					return "Illegal token.";
+				}
+			default:
+				System.err.println("ERROR: Reached wrong state " + state);
+				return "ERROR_TOKEN";
+		}
+	}
+	return "EOF";
+}
+public String keywords(String lexeme)
+{
+				if (lexeme.toLowerCase() == "class"){
+					return "CLASS";
+				}
+				else if (lexeme.toLowerCase() == "public"){
+					return "PUBLIC";
+				}
+				else if (lexeme.toLowerCase() == "stadic"){
+					return "STADIC";
+				}
+				else if (lexeme.toLowerCase() == "void"){
+					return "VOID";
+				}
+				else if (lexeme.toLowerCase() == "main"){
+					return "MAIN";
+				}
+				else if (lexeme.toLowerCase() == "string"){
+					return "STRING";
+				}
+				else if (lexeme.toLowerCase() == "extends"){
+					return "EXTENDS";
+				}
+				else if (lexeme.toLowerCase() == "return"){
+					return "RETURN";
+				}
+				else if (lexeme.toLowerCase() == "int"){
+					return "INT";
+				}
+				else if (lexeme.toLowerCase() == "double"){
+					return "DOUBLE";
+				}
+				else if (lexeme.toLowerCase() == "boolean"){
+					return "BOOLEAN";
+				}
+				else if (lexeme.toLowerCase() == "if"){
+					return "IF";
+				}
+				else if (lexeme.toLowerCase() == "while"){
+					return "WHILE";
+				}
+				else if (lexeme == "System.out.print"){
+					return "SYSTEM.OUT.PRINT";
+				}
+				else if (lexeme.toLowerCase() == "length"){
+					return "LENGTH";
+				}
+				else if (lexeme.toLowerCase() == "true"){
+					return "TRUE";
+				}
+				else if (lexeme.toLowerCase() == "false"){
+					return "FALSE";
+				}
+				else if (lexeme.toLowerCase() == "this"){
+					return "THIS";
+				}
+				else if (lexeme.toLowerCase() == "new"){
+					return "NEW";
+				}
+				else if (lexeme == "Xinu.print"){
+					return "PRINT";
+				}
+				else if (lexeme == "Xinu.println"){
+					return "PRINTLN";
+				}
+				else if (lexeme == "Xinu.printint"){
+					return "PRINTINT";
+				}
+				else if (lexeme == "Xinu.readint"){
+					return "READINT";
+				}
+				else
+					return null;
+}
+
+	public String solve(State state, String lexeme)
+{
+	switch(state)
+	{
+	    case ALPHA_ACCEPT:{ 
+			String alpha = keywords(lexeme);
+			if(alpha != null ) return alpha;
+			 return lexeme;	
+		}
+	    case INT_ACCEPT:         return "INTEGER_LITERAL(" + lexeme + ")";
+            case HEX_ACCEPT:         return "HEXADECIMAL_LITERAL(" + lexeme + ")";
+            case OCT_ACCEPT:         return "OCTAL_LITERAL(" + lexeme + ")";
+            case INT_ERR: return "Invalid character in number.";
+            case HEX_ERR: return "Invalid character in hex number.";
+            case OCT_ERR: return "Invalid character in octal number.";
+            case QUOTE_ACCEPT:       return "STRING_LITERAL(" + lexeme + ")";
+            case DIVDE:      return "FORWARDSLASH";
+            case OP_BASE_ACCEPT:   return opReader(lexeme);
+            case PUNC_ACCEPT:        return opReader(lexeme);
+            case OP_TWO_ACCEPT:
+            case OP_ONE_ACCEPT:      return opReader(lexeme);
+            default:                 return "Illegal token.";	
+}
+}
+	public String opReader(String lexeme)
+{
+
 				if(lexeme == "&&"){
 					return "AND";
 				}
@@ -254,145 +393,13 @@ public String getToken (java.io.Reader reader) throws java.io.IOException
 				else if (lexeme == "."){
 					return "PERIOD";
 				}
-				else if (lexeme == ";"){
-					return "SEMICOLON";
-				}
-				else if (lexeme.toLowerCase() == "class"){
-					return "CLASS";
-				}
-				else if (lexeme.toLowerCase() == "public"){
-					return "PUBLIC";
-				}
-				else if (lexeme.toLowerCase() == "stadic"){
-					return "STADIC";
-				}
-				else if (lexeme.toLowerCase() == "void"){
-					return "VOID";
-				}
-				else if (lexeme.toLowerCase() == "main"){
-					return "MAIN";
-				}
-				else if (lexeme.toLowerCase() == "string"){
-					return "STRING";
-				}
-				else if (lexeme.toLowerCase() == "extends"){
-					return "EXTENDS";
-				}
-				else if (lexeme.toLowerCase() == "return"){
-					return "RETURN";
-				}
-				else if (lexeme.toLowerCase() == "int"){
-					return "INT";
-				}
-				else if (lexeme.toLowerCase() == "double"){
-					return "DOUBLE";
-				}
-				else if (lexeme.toLowerCase() == "boolean"){
-					return "BOOLEAN";
-				}
-				else if (lexeme.toLowerCase() == "if"){
-					return "IF";
-				}
-				else if (lexeme.toLowerCase() == "while"){
-					return "WHILE";
-				}
-				else if (lexeme == "System.out.print"){
-					return "SYSTEM.OUT.PRINT";
-				}
-				else if (lexeme.toLowerCase() == "length"){
-					return "LENGTH";
-				}
-				else if (lexeme.toLowerCase() == "true"){
-					return "TRUE";
-				}
-				else if (lexeme.toLowerCase() == "false"){
-					return "FALSE";
-				}
-				else if (lexeme.toLowerCase() == "this"){
-					return "THIS";
-				}
-				else if (lexeme.toLowerCase() == "new"){
-					return "NEW";
-				}
-				else if (lexeme == "Xinu.print"){
-					return "PRINT";
-				}
-				else if (lexeme == "Xinu.println"){
-					return "PRINTLN";
-				}
-				else if (lexeme == "Xinu.printint"){
-					return "PRINTINT";
-				}
-				else if (lexeme == "Xinu.readint"){
-					return "READINT";
-				}
-			case COMMENT_BUILDING:
-				lexeme = lexeme + (char) c;
-				if (Debug) System.out.println("Currentl reading" + c);
-				c = reader.read();
-				break;
-			case SINGLE_COMMENT:
-				lexeme =  lexeme + (char) c;
-				c = reader.read();
-				break;
-			case MULTI_COMMENT:
-				lexeme =  lexeme + (char) c;
-                                c = reader.read();
-                                break;	
-			case COMMENT_ACCEPT:
-				lexeme =  lexeme + (char) c;
-                                c = reader.read();
-                                break;
-			case ERR:
-				//Temp message will need to put out required Error
-				int numErr = 0;
-				for (int i = 0; i < lexeme.length(); i++){
-					if(!Character.isDigit(lexeme.charAt(i))){
-						if(lexeme.substring(0,2) == "0x"){
-							numErr = 1;
-						}
-						else if(lexeme.charAt(0) == '0'){
-							numErr = 2;
-						}
-						else if(lexeme.charAt(0) != '0'){
-							numErr = 3;
-						}
-					}
-				}
-				if((lexeme.substring(0,2) == "/*") && (lexeme.substring(lexeme.length()-2)) != "*/"){
-					return "Comment not terminated at end of input";
-				}
-				else if(numErr == 1){
-					return "Invalid character in hex number.";
-				}
-				else if(numErr == 2){
-					return "Invalid character in octal number.";
-				}
-				else if(numErr == 3){
-					return "Invalid character in number.";
-				}
-				else if((lexeme.charAt(0) == '"') && (lexeme.charAt(lexeme.length()-1) != '"')){
-					return "String not terminated at end of line.";
-				}
-				else{
-					return "Illegal token.";
-				}
-			default:
-				System.err.println("ERROR: Reached wrong state " + state);
-				return "ERROR_TOKEN";
-		}
-	}
-	return "EOF";
+				return "ERROR";
 }
-
-
-
 	public static void main(String[] args) throws java.io.IOException
 	{
-		java.io.Reader reader = null;
+		PushbackReader reader = new PushbackReader(new BufferedReader(new InputStreamReader(System.in)), 16);
         	Scanner s = new Scanner();
 
-        	reader = new java.io.BufferedReader (new java.io.InputStreamReader (System.in));
 
         	String token;
         	do
