@@ -1,4 +1,12 @@
 package Parse;
+ /**
+  2  * COSC 4400 - Project #3
+  3  * 
+  4  * @authors Luke Sam 
+  5  * Instructor Dr. Brylow
+  6  * TA-BOT:MAILTO luke.sharba@marquette.edu 
+  7  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
+  8  */
 
 import java.io.Reader;
 import java.io.BufferedReader;
