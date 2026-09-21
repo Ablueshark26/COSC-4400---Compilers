@@ -82,6 +82,15 @@ TOKEN :
 	| < STRING: "\"" (~["\""])*  "\"" >
 }
 
+/***************/
+/*  Operators  */
+/***************/
+TOKEN:
+{
+	< "+" > | < "-" > | < "*" > | < "/" >
+	| < "<" > | < ">" > | < "==" > | < "!= " >
+}
+
 
 /***************/
 /* Identifiers */
@@ -203,11 +212,29 @@ Absyn.XinuCallStmt XinuCallStatement() :
 	")" ";" { return new Absyn.XinuCallStmt(method.toString(), args); }
 }
 
-Absyn.Expr Expression() :
+Absyn.Expr Expression() :  //Loosest to tightest
 {
-	Token t;
+	Absyn Expr e;
 }
 {
-        t=<STRING> { return new Absyn.StringLiteral(t.toString()); }
+        e = Or()
+	{return e;}
+}
+Absyn.Expr Or() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = And()
+	( "||" right = And() {left new Absyn.OrExpr(left,right);} )*
+	{return left;}
 }
 
+Absyn.Expr Prime() : 
+{
+	Token t; Absyn.Expr e;
+}
+{
+	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
+	| t = <INT> {return new Absyn.IntergerLiteral(Integer.parseInt(t.image));}
+	| "(" e = Expression() ")" {return e;}
+}
