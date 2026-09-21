@@ -149,5 +149,13 @@ public class PrintVisitor implements Visitor
 		ast.base.accept(this);
 		out.print(")");
     }
+    public void visit(IntegerType ast)
+    {
+	        out.print("IntegerType");
+    }
+    public void visit(BooleanType ast)
+    {
+                out.print("BooleanType");
+    }
 
 }

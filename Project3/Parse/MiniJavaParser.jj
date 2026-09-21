@@ -48,6 +48,8 @@ TOKEN :
 
 	/* Types. */
 	| < "void" >
+	| < "int" >
+	| < "boolean" >
 
 	/* Operators. */
 	| < "." >
@@ -174,8 +176,11 @@ Absyn.Type BaseType() :
 	Token name;
 }
 {
-	name = <ID>	{ return new Absyn.IdentifierType(name.toString()); }
+	  "int"		{ return new Absyn.IntegerType();} //base applies [] so arrays will work
+	| "boolean"	{ return new Absyn.BooleanType();}
+	| name = <ID>	{ return new Absyn.IdentifierType(name.toString());} 
 }
+
 
 Absyn.Stmt Statement() :
 {

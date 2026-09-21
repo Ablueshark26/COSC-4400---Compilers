@@ -20,4 +20,6 @@ public interface Visitor
     public void visit(StringLiteral ast);
     public void visit(VarDecl ast);
     public void visit(XinuCallStmt ast);
+    public void visit(IntegerType ast);
+    public void visit(BooleanType ast);
 }
