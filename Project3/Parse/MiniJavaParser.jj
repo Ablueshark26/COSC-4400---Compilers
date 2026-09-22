@@ -224,7 +224,7 @@ Absyn.XinuCallStmt XinuCallStatement() :
 
 Absyn.Expr Expression() :  //Loosest to tightest
 {
-	Absyn Expr e;
+	Absyn.Expr e;
 }
 {
         e = Or()
@@ -235,7 +235,7 @@ Absyn.Expr Or() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = And()
-	( "||" right = And() {left new Absyn.OrExpr(left,right);} )*
+	( "||" right = And() {return new Absyn.OrExpr(left,right);} )*
 	{return left;}
 }
 
@@ -244,7 +244,7 @@ Absyn.Expr Or() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = Equals()
-         ( "&&" right = Equals() {left new Absyn.AndExpr(left,right);} )*
+         ( "&&" right = Equals() {return new Absyn.AndExpr(left,right);} )*
          {return left;}
 }
 
@@ -253,8 +253,8 @@ Absyn.Expr Or() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = Compare()
-        ( "==" right = Compare() {left new Absyn.EqualExpr(left,right);} 
-	"!=" right = Compare() {left new Absyn.NotEqExpr(left,right);})*
+        ( "==" right = Compare() {return new Absyn.EqualExpr(left,right);} 
+	"!=" right = Compare() {return new Absyn.NotEqExpr(left,right);})*
         {return left;}
 }
 
@@ -263,8 +263,8 @@ Absyn.Expr Compare() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = AddSub()
-        ( ">" right = AddSub() {left new Absyn.GreaterExpr(left,right);}
-        "<" right = AddSub() {left new Absyn.LesserExpr(left,right);})*
+        ( ">" right = AddSub() {return new Absyn.GreaterExpr(left,right);}
+        "<" right = AddSub() {return new Absyn.LesserExpr(left,right);})*
         {return left;}
 }
 
@@ -273,8 +273,8 @@ Absyn.Expr AddSub() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = MultDiv()
-        ( "+" right = MultDiv() {left new Absyn.AddExpr(left,right);}
-        "-" right = MultDiv() {left new Absyn.SubExpr(left,right);})*
+        ( "+" right = MultDiv() {return new Absyn.AddExpr(left,right);}
+        "-" right = MultDiv() {return new Absyn.SubExpr(left,right);})*
         {return left;}
 }
 
@@ -283,8 +283,8 @@ Absyn.Expr MultDiv() :
     Absyn.Expr left, right;
 }
 {                                                                                   left = Prime()
-        ( "*" right = Prime() {left new Absyn.MulExpr(left,right);}
-        "/" right = Prime() {left new Absyn.DivExpr(left,right);})*
+        ( "*" right = Prime() {return new Absyn.MulExpr(left,right);}
+        "/" right = Prime() {return new Absyn.DivExpr(left,right);})*
         {return left;}
 }
 
@@ -299,6 +299,6 @@ Absyn.Expr Prime() :
 }
 {
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
-	| t = <INT> {return new Absyn.IntergerLiteral(Integer.parseInt(t.image));}
+	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
 	| "(" e = Expression() ")" {return e;}
 }

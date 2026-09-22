@@ -22,4 +22,14 @@ public interface Visitor
     public void visit(XinuCallStmt ast);
     public void visit(IntegerType ast);
     public void visit(BooleanType ast);
+    public void visit(AddExpr ast);
+    public void visit(SubExpr ast);
+    public void visit(MulExpr ast);
+    public void visit(DivExpr ast);
+    public void visit(LesserExpr ast);
+    public void visit(GreaterExpr ast);
+    public void visit(EqualExpr ast);
+    public void visit(NotEqExpr ast);
+    public void visit(AndExpr ast);
+    public void visit(OrExpr ast);    
 }

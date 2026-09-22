@@ -157,5 +157,23 @@ public class PrintVisitor implements Visitor
     {
                 out.print("BooleanType");
     }
-
+    private void printBinOp(String name, BinOpExpr ast){
+	    indent();
+    	    out.print(name + "(");
+	    indentCount ++; 
+	    ast.e1.accept(this);
+	    ast.e2.accept(this);
+	    indentCount --;
+	    out.print(")");
+    }
+    public void visit(AddExpr ast) { printBinOp("AddExpr", ast); }
+    public void visit(SubExpr ast) { printBinOp("SubExpr", ast); }
+    public void visit(MulExpr ast) { printBinOp("MulExpr", ast); }
+    public void visit(DivExpr ast) { printBinOp("DivExpr", ast); }
+    public void visit(LesserExpr ast) { printBinOp("LesserExpr", ast); }
+    public void visit(GreaterExpr ast) { printBinOp("GreaterExpr", ast); }
+    public void visit(EqualExpr ast) { printBinOp("EqualExpr", ast); }
+    public void visit(NotEqExpr ast) { printBinOp("NotEqExpr", ast); }
+    public void visit(AndExpr ast) { printBinOp("AndExpr", ast); }
+    public void visit(OrExpr ast) { printBinOp("OrExpr", ast); }
 }

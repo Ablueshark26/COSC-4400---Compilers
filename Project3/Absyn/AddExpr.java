@@ -1,6 +1,6 @@
-Package Absyn;
+package Absyn;
 
-public class AddExpr extends BinaryOpExpr{
+public class AddExpr extends BinOpExpr{
 	public AddExpr (Expr e1, Expr e2) {super(e1,e2);}
-	Public void accept(Visitor v) {v.visit(this); }
+	public void accept(Visitor v) {v.visit(this); }
 }
