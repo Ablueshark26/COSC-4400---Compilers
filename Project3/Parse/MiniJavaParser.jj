@@ -96,7 +96,7 @@ TOKEN :
 TOKEN:
 {
 	< "+" > | < "-" > | < "*" > | < "/" >
-	| < "<" > | < ">" > | < "==" > | < "!= " >
+	| < "<" > | < ">" > | < "==" > | < "!=" >
 	| < "&&" > | < "||" > | < "!" > | < "?" >
 }
 
@@ -254,7 +254,7 @@ Absyn.Expr Or() :
 }
 {                                                                                   left = Compare()
         ( "==" right = Compare() {return new Absyn.EqualExpr(left,right);} 
-	"!=" right = Compare() {return new Absyn.NotEqExpr(left,right);})*
+	| "!=" right = Compare() {return new Absyn.NotEqExpr(left,right);})*
         {return left;}
 }
 
@@ -264,7 +264,7 @@ Absyn.Expr Compare() :
 }
 {                                                                                   left = AddSub()
         ( ">" right = AddSub() {return new Absyn.GreaterExpr(left,right);}
-        "<" right = AddSub() {return new Absyn.LesserExpr(left,right);})*
+        | "<" right = AddSub() {return new Absyn.LesserExpr(left,right);})*
         {return left;}
 }
 
@@ -274,7 +274,7 @@ Absyn.Expr AddSub() :
 }
 {                                                                                   left = MultDiv()
         ( "+" right = MultDiv() {return new Absyn.AddExpr(left,right);}
-        "-" right = MultDiv() {return new Absyn.SubExpr(left,right);})*
+        | "-" right = MultDiv() {return new Absyn.SubExpr(left,right);})*
         {return left;}
 }
 
@@ -284,7 +284,7 @@ Absyn.Expr MultDiv() :
 }
 {                                                                                   left = Prime()
         ( "*" right = Prime() {return new Absyn.MulExpr(left,right);}
-        "/" right = Prime() {return new Absyn.DivExpr(left,right);})*
+        | "/" right = Prime() {return new Absyn.DivExpr(left,right);})*
         {return left;}
 }
 
