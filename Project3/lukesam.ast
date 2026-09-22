@@ -1,5 +1,38 @@
-Parse.ParseException: Encountered " "int" "int "" at line 3, column 2.
-Was expecting one of:
-    "}" ...
-    "Xinu" ...
-    
+Program(
+ AbstractList(
+  ClassDecl(Operators null
+   AbstractList()
+   AbstractList(
+    MethodDecl(public_static_void main
+     AbstractList(
+      Formal(ArrayType(IdentifierType(String)) a))
+     AbstractList(
+      VarDecl(IntegerType x
+      AddExpr(
+       IntegerLiteral(1)
+       MulExpr(
+        IntegerLiteral(1)
+        IntegerLiteral(2))))
+      VarDecl(IntegerType y
+      DivExpr(
+       AddExpr(
+        IntegerLiteral(3)
+        IntegerLiteral(5))
+       IntegerLiteral(2)))
+      VarDecl(IntegerType z
+      AddExpr(
+       AndExpr(
+        IntegerLiteral(1)
+        IntegerLiteral(0))
+       IntegerLiteral(3))))
+     AbstractList(
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(x)))
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(y)))
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(z))))
+     IntegerLiteral(0))))))

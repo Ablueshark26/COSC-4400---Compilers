@@ -97,7 +97,7 @@ TOKEN:
 {
 	< "+" > | < "-" > | < "*" > | < "/" >
 	| < "<" > | < ">" > | < "==" > | < "!=" >
-	| < "&&" > | < "||" > | < "!" > | < "?" >
+	| < "&&" > | < "||" > | < "!" > | < "?" > | < "=" >
 }
 
 
@@ -300,5 +300,6 @@ Absyn.Expr Prime() :
 {
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
 	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
+	| t = <ID> {return new Absyn.IdentifierExpr(t.toString()); }
 	| "(" e = Expression() ")" {return e;}
 }

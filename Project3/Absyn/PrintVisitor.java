@@ -176,4 +176,8 @@ public class PrintVisitor implements Visitor
     public void visit(NotEqExpr ast) { printBinOp("NotEqExpr", ast); }
     public void visit(AndExpr ast) { printBinOp("AndExpr", ast); }
     public void visit(OrExpr ast) { printBinOp("OrExpr", ast); }
+    public void visit(IdentifierExpr ast){
+	    indent();
+	    out.print("IdentifierExpr(" + ast.name + ")");
+    }
 }

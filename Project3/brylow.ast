@@ -25,5 +25,14 @@ Program(
         IntegerLiteral(1)
         IntegerLiteral(0))
        IntegerLiteral(3))))
-     AbstractList()
+     AbstractList(
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(x)))
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(y)))
+      XinuCallStmt(print
+       AbstractList(
+        IdentifierExpr(z))))
      IntegerLiteral(0))))))

@@ -32,4 +32,5 @@ public interface Visitor
     public void visit(NotEqExpr ast);
     public void visit(AndExpr ast);
     public void visit(OrExpr ast);    
+    public void visit(IdentifierExpr ast);
 }
