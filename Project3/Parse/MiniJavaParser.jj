@@ -204,8 +204,9 @@ Absyn.Stmt Statement() :
 {
 	Absyn.Stmt stmt;
 }
-{
+{	
 	stmt = XinuCallStatement()	{ return stmt; }
+	
 }
 
 Absyn.XinuCallStmt XinuCallStatement() :
@@ -237,6 +238,60 @@ Absyn.Expr Or() :
 	( "||" right = And() {left new Absyn.OrExpr(left,right);} )*
 	{return left;}
 }
+
+ Absyn.Expr And() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = Equals()
+         ( "&&" right = Equals() {left new Absyn.AndExpr(left,right);} )*
+         {return left;}
+}
+
+ Absyn.Expr Equals() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = Compare()
+        ( "==" right = Compare() {left new Absyn.EqualExpr(left,right);} 
+	"!=" right = Compare() {left new Absyn.NotEqExpr(left,right);})*
+        {return left;}
+}
+
+Absyn.Expr Compare() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = AddSub()
+        ( ">" right = AddSub() {left new Absyn.GreaterExpr(left,right);}
+        "<" right = AddSub() {left new Absyn.LesserExpr(left,right);})*
+        {return left;}
+}
+
+Absyn.Expr AddSub() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = MultDiv()
+        ( "+" right = MultDiv() {left new Absyn.AddExpr(left,right);}
+        "-" right = MultDiv() {left new Absyn.SubExpr(left,right);})*
+        {return left;}
+}
+
+Absyn.Expr MultDiv() :
+{
+    Absyn.Expr left, right;
+}
+{                                                                                   left = Prime()
+        ( "*" right = Prime() {left new Absyn.MulExpr(left,right);}
+        "/" right = Prime() {left new Absyn.DivExpr(left,right);})*
+        {return left;}
+}
+
+
+
+
+
 
 Absyn.Expr Prime() : 
 {
