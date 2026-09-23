@@ -40,4 +40,7 @@ public interface Visitor
     public void visit(XinuCallExpr ast);
     public void visit(IfStmt ast);
     public void visit(WhileStmt ast);
+    public void visit(BlockStmt ast);
+    public void visit(VoidDecl ast);
+    public void visit(ThreadDecl ast);
 }

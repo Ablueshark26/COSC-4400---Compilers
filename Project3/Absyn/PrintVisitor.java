@@ -179,5 +179,102 @@ public class PrintVisitor implements Visitor
     public void visit(IdentifierExpr ast){
 	    indent();
 	    out.print("IdentifierExpr(" + ast.name + ")");
+    public void visit(NegExpr ast) {
+	    indent();
+	    out.print("NegExpr(");
+    	    indentCount++;
+            ast.e.accept(this);
+    	    indentCount--;
+            out.print(")");
+    }
+
+    public void visit(NotExpr ast) {
+            indent();
+            out.print("NotExpr(");
+            indentCount++;
+            ast.e.accept(this);
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(NullExpr ast) {
+            indent();
+            out.print("NullExpr");
+    }
+
+    public void visit(NewArrayExpr ast) {
+            indent();
+            out.print("NewArrayExpr(");
+            indentCount++;
+            ast.type.accept(this);
+            ast.size.accept(this);
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(XinuCallExpr ast) {
+            indent();
+            out.print("XinuCallExpr(");
+            indentCount++;
+            out.print(ast.function);
+            visit((java.util.AbstractList) ast.args);
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(IfStmt ast) {
+            indent();
+            out.print("IfStmt(");
+            indentCount++;
+            ast.cond.accept(this);
+            ast.thenStmt.accept(this);
+            if (null == ast.elseStmt) { indent(); out.print("null"); }
+            else { ast.elseStmt.accept(this); }
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(WhileStmt ast) {
+            indent();
+            out.print("WhileStmt(");
+            indentCount++;
+            ast.cond.accept(this);
+            ast.body.accept(this);
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(BlockStmt ast) {
+            indent();
+            out.print("BlockStmt(");
+            indentCount++;
+            visit((java.util.AbstractList) ast.stmts);
+            indentCount--;
+            out.print(")");
+    }
+
+    public void visit(VoidDecl ast) {
+            indent();
+            out.print("VoidDecl(");
+    	    indentCount++;
+    	    out.print(ast.name);
+    	    visit((java.util.AbstractList) ast.locals);
+    	    visit((java.util.AbstractList) ast.body);
+    	    indentCount--;
+    	    out.print(")");
+    }
+
+    public void visit(ThreadDecl ast) {
+       	    indent();
+    	    out.print("ThreadDecl(");
+    	    indentCount++;
+    	    out.print(ast.name + " Thread");
+    	    visit((java.util.AbstractList) ast.fields);
+    	    LinkedList<Absyn> decls = new LinkedList<Absyn>();
+    	    decls.addAll(ast.methods);
+    	    decls.addAll(ast.voidMethods);
+    	    visit(decls);
+    	    indentCount--;
+    	    out.print(")");
     }
 }

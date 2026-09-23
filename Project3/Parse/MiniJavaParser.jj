@@ -50,6 +50,8 @@ TOKEN :
 	| < "else" >
 	| < "true" >
 	| < "false" >
+	| < "synchronized" >
+	| < "return" >
 
 	/* Types. */
 	| < "void" >
@@ -123,18 +125,8 @@ SKIP :
 /* MiniJava Grammar */
 /********************/
 
-// Goal 	::= 	MainClass ( ClassDeclaration | ThreadDeclaration )* <EOF>
-Absyn.Program Goal() :
-{
-	LinkedList<Absyn.ClassDecl> cl = new LinkedList<Absyn.ClassDecl>();
-}
-{
-	MainClassDeclaration(cl) <EOF>
-	{ return new Absyn.Program(cl); }
-}
-
 // MainClass 	::= 	"class" Identifier "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier ")" "{" Statement "}" "}"
-Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
+Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.Absyn> cl) :
 {
 	Absyn.ClassDecl  cd;
 	Absyn.Stmt stmt;
@@ -179,6 +171,101 @@ Absyn.VarDecl VarDeclaration() :
 	type = Type() name = <ID> [ "=" init = Expression() ] ";"
 	{ return new Absyn.VarDecl(type, name.toString(), init); }
 }
+// Field Decleration Type <ID> ";"
+Absyn.VarDecl FieldDecl():
+{
+	Absyn.Type type;
+	Token name;
+}
+{
+	type = Type() name = <ID> ";"
+	{ return new Absyn.VarDecl(type, name.toString(), null); }
+}
+
+// MethodDeclaration ::= "public" ("synchronized")? Type <ID> "(" (Type <ID> ("," Type <ID>)*)? ")"
+//                        "{" (VarDeclaration)* (Statement)* "return" Expression ";" "}"
+Absyn.MethodDecl MethodDeclaration() :
+{
+	boolean synced = false;
+	Absyn.Type returnType, ptype;
+	Token name, pname;
+	LinkedList<Absyn.Formal> params  = new LinkedList<Absyn.Formal>();
+	LinkedList<Absyn.VarDecl> locals = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.Stmt> stmts     = new LinkedList<Absyn.Stmt>();
+	Absyn.VarDecl local;
+	Absyn.Stmt stmt;
+	Absyn.Expr returnVal;
+}
+{
+	"public" [ "synchronized" { synced = true; } ]
+	returnType = Type() name = <ID> "("
+		[ ptype = Type() pname = <ID> { params.add(new Absyn.Formal(ptype, pname.toString())); }
+			( "," ptype = Type() pname = <ID> { params.add(new Absyn.Formal(ptype, pname.toString())); } )* ]
+	")" "{"
+		( LOOKAHEAD(VarDeclaration()) local = VarDeclaration() { locals.add(local); } )*
+		( stmt = Statement() { stmts.add(stmt); } )*
+		"return" returnVal = Expression() ";"
+	"}"
+	{ return new Absyn.MethodDecl(returnType, synced, name.toString(), params, locals, stmts, returnVal); }
+}
+
+// VoidDeclaration ::= "public" "void" <ID> "(" ")" "{" (VarDeclaration)* (Statement)* "}"
+Absyn.VoidDecl VoidDeclaration() :
+{
+	Token name;
+	LinkedList<Absyn.VarDecl> locals = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.Stmt> stmts     = new LinkedList<Absyn.Stmt>();
+	Absyn.VarDecl local;
+	Absyn.Stmt stmt;
+}
+{
+	"public" "void" name = <ID> "(" ")" "{"
+		( LOOKAHEAD(VarDeclaration()) local = VarDeclaration() { locals.add(local); } )*
+		( stmt = Statement() { stmts.add(stmt); } )*
+	"}"
+	{ return new Absyn.VoidDecl(name.toString(), locals, stmts); }
+}
+
+// ClassDeclaration  ::= "class" <ID> ( "extends" <ID> )? "{" ( FieldDeclaration | MethodDeclaration )* "}"
+// ThreadDeclaration ::= "class" <ID> "extends" "Thread" "{" ( FieldDeclaration | MethodDeclaration | VoidDeclaration )* "}"
+Absyn.Absyn ClassOrThreadDeclaration() :
+{
+	Token name, parentId = null;
+	LinkedList<Absyn.VarDecl> fields       = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.MethodDecl> methods   = new LinkedList<Absyn.MethodDecl>();
+	LinkedList<Absyn.VoidDecl> voidMethods = new LinkedList<Absyn.VoidDecl>();
+	Absyn.VarDecl field;
+	Absyn.MethodDecl method;
+	Absyn.VoidDecl vmethod;
+}
+{
+	"class" name = <ID>
+	(
+	    LOOKAHEAD("extends" "Thread")
+	    "extends" "Thread" "{"
+	    (   field = FieldDeclaration()              { fields.add(field); }
+	      | LOOKAHEAD(2) vmethod = VoidDeclaration() { voidMethods.add(vmethod); }
+	      | method = MethodDeclaration()             { methods.add(method); }
+	    )*
+	    "}"
+	    { return new Absyn.ThreadDecl(name.toString(), fields, methods, voidMethods); }
+
+	  | [ "extends" parentId = <ID> ] "{"
+	    (   field = FieldDeclaration()  { fields.add(field); }
+	      | method = MethodDeclaration() { methods.add(method); }
+	    )*
+	    "}"
+	    { return new Absyn.ClassDecl(name.toString(),
+	              (parentId == null ? null : parentId.toString()), fields, methods); }
+	)
+}
+// Goal         ::=     MainClass ( ClassDeclaration | ThreadDeclaration )* <EOF>
+Absyn.Program Goal() :
+{
+        LinkedList<Absyn.Absyn> cl = new LinkedList<Absyn.Absyn>();
+        Absyn.Absyn decl;
+}
+{                                                                                   MainClassDeclaration(cl)                                                    (decl = ClassOrThreadDecleration() { c1.add(decl); } )*                     <EOF>                                                                       { return new Absyn.Program(cl); }                                   }
 
 Absyn.Type Type() :
 {
@@ -204,9 +291,11 @@ Absyn.Type BaseType() :
 Absyn.Stmt Statement() :
 {
 	Absyn.Stmt stmt;
+	LinkedList <Absyn.Stmt> stmts = new LinkedList <Absyn.Stmt>();
 }
 {	
-	stmt = XinuCallStatement()	{ return stmt; }
+	"{" ( stmt = Statement() {stmts.add(stmt); } )* "}" {return new Absyn.BlockStmt(stmts); }
+	| stmt = XinuCallStatement()	{ return stmt; }
 	| stmt = IfState()	{return stmt; }
 	| stmt = WhileState()      {return stmt; }
 }
@@ -294,13 +383,13 @@ Absyn.Expr Unary() :
 	Absyn.Expr e;
 }
 {
-         "-" right = Prime() {return new Absyn.NegExpr(e);}
-        | "!" right = Prime() {return new Absyn.NotExpr(e);}
+         "-" e = Unary() {return new Absyn.NegExpr(e);}
+        | "!" e = Unary() {return new Absyn.NotExpr(e);}
         | e = Prime() {return e;}
-{
+}
 Absyn.Expr Prime() : 
 {
-	Token t; Absyn.Expr e; Absyn.Type type; LinkedList<Absyn.Expr> args = new LinkedList<Absyn.Expr>();
+	Token t; Absyn.Expr e, arg; Absyn.Type type; LinkedList<Absyn.Expr> args = new LinkedList<Absyn.Expr>();
 }
 {
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
@@ -334,5 +423,6 @@ Absyn.Stmt WhileState(): //same as before simpiler
 	Absyn.Stmt then;
 }
 {
-	"while" "(" cond = Expression() ")" body = Statement() {return new Absyn.WhileStmt(cond, body); }
+	"while" "(" condition = Expression() ")" then = Statement() {return new Absyn.WhileStmt(condition, then); }
 }
+

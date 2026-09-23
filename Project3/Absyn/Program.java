@@ -8,7 +8,7 @@ import java.util.AbstractList;
 
 public class Program extends Absyn
 {
-    public AbstractList<ClassDecl> classes;
+    public AbstractList<Absyn> classes;
 
     public Program(AbstractList<ClassDecl> classes)
     {
