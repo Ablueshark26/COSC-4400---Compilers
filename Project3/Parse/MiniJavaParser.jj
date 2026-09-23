@@ -172,7 +172,7 @@ Absyn.VarDecl VarDeclaration() :
 	{ return new Absyn.VarDecl(type, name.toString(), init); }
 }
 // Field Decleration Type <ID> ";"
-Absyn.VarDecl FieldDecl():
+Absyn.VarDecl FieldDeclaration():
 {
 	Absyn.Type type;
 	Token name;
@@ -265,7 +265,12 @@ Absyn.Program Goal() :
         LinkedList<Absyn.Absyn> cl = new LinkedList<Absyn.Absyn>();
         Absyn.Absyn decl;
 }
-{                                                                                   MainClassDeclaration(cl)                                                    (decl = ClassOrThreadDecleration() { c1.add(decl); } )*                     <EOF>                                                                       { return new Absyn.Program(cl); }                                   }
+{               
+	MainClassDeclaration(cl)
+	(decl = ClassOrThreadDeclaration() { cl.add(decl); } )*             
+	<EOF>                                                             
+	{ return new Absyn.Program(cl); }                                   
+}
 
 Absyn.Type Type() :
 {

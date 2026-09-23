@@ -10,7 +10,7 @@ public class Program extends Absyn
 {
     public AbstractList<Absyn> classes;
 
-    public Program(AbstractList<ClassDecl> classes)
+    public Program(AbstractList<Absyn> classes)
     {
 		this.classes = classes;
     }

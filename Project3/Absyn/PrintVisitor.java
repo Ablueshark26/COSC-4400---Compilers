@@ -1,6 +1,7 @@
 /* Copyright (C) 2007, Marquette University.  All rights reserved. */
 package Absyn;
 import java.io.PrintWriter;
+import java.util.LinkedList;
 
 /**
  * Visitor prints AST in reparseable form.
@@ -179,6 +180,7 @@ public class PrintVisitor implements Visitor
     public void visit(IdentifierExpr ast){
 	    indent();
 	    out.print("IdentifierExpr(" + ast.name + ")");
+    }
     public void visit(NegExpr ast) {
 	    indent();
 	    out.print("NegExpr(");
