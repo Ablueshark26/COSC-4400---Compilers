@@ -33,4 +33,11 @@ public interface Visitor
     public void visit(AndExpr ast);
     public void visit(OrExpr ast);    
     public void visit(IdentifierExpr ast);
+    public void visit(NegExpr ast);
+    public void visit(NotExpr ast);
+    public void visit(NullExpr ast);
+    public void visit(NewArrayExpr ast);
+    public void visit(XinuCallExpr ast);
+    public void visit(IfStmt ast);
+    public void visit(WhileStmt ast);
 }
