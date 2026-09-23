@@ -430,7 +430,7 @@ Absyn.Expr Prime() :
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
 	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
 	| "null" {return new Absyn.NullExpr(); }
-	| "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
+	| LOOKAHEAD(3) "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
 	| "new" type = BaseType() "[" e = Expression() "]" {return new Absyn.NewArrayExpr(type,e); } //format for arrays Basetype works with []
 	| "Xinu" "." t = <ID>
         "(" [ arg = Expression() { args.add(arg); }
