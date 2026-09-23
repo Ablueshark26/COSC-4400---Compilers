@@ -279,4 +279,61 @@ public class PrintVisitor implements Visitor
     	    indentCount--;
     	    out.print(")");
     }
+
+    public void visit(ArrayExpr ast) {
+            indent();
+	    out.print("ArrayExpr(");
+	    indentCount++;
+	    ast.array.accept(this);
+	    ast.index.accept(this);
+	    indentCount --;
+	    out.print(")");
+    }
+    public void visit(FieldExpr ast) {
+           indent();
+           out.print("FieldExpr(");
+           indentCount++;
+           ast.object.accept(this);
+           out.print(" " + ast.field);
+           indentCount--;
+           out.print(")");
+    }
+    public void visit(ThisExpr ast) {
+           indent();
+           out.print("ThisExpr");
+    }
+
+    public void visit(TrueExpr ast) {
+    	   indent();
+    	   out.print("TrueExpr");
+    }
+
+    public void visit(FalseExpr ast) {
+    	   indent();
+    	   out.print("FalseExpr");
+    }
+    public void visit(AssignStmt ast) {
+           indent();
+           out.print("AssignStmt(");
+           indentCount++;
+    	   ast.lhs.accept(this);
+    	   ast.rhs.accept(this);
+    	   indentCount--;
+    	   out.print(")");
+    }
+    public void visit(CallExpr ast) {
+           indent();
+           out.print("CallExpr(");
+           indentCount++;
+           ast.object.accept(this);
+           out.print(" " + ast.method);
+           visit((java.util.AbstractList) ast.args);
+           indentCount--;
+           out.print(")");
+    }
+
+    public void visit(NewObjectExpr ast) {
+           indent();
+           out.print("NewObjectExpr(" + ast.className + ")");
+    }
 }

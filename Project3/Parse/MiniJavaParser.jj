@@ -296,6 +296,8 @@ Absyn.Type BaseType() :
 Absyn.Stmt Statement() :
 {
 	Absyn.Stmt stmt;
+	Absyn.AssignableExpr lhs;
+	Absyn.Expr rhs;
 	LinkedList <Absyn.Stmt> stmts = new LinkedList <Absyn.Stmt>();
 }
 {	
@@ -303,6 +305,7 @@ Absyn.Stmt Statement() :
 	| stmt = XinuCallStatement()	{ return stmt; }
 	| stmt = IfState()	{return stmt; }
 	| stmt = WhileState()      {return stmt; }
+	| LOOKAHEAD(AssignableExpr() "=") lhs = AssignableExpr() "=" rhs = Expression() ";" {return new Absyn.AssignStmt(lhs, rhs); }
 }
 
 Absyn.XinuCallStmt XinuCallStatement() :
@@ -317,7 +320,20 @@ Absyn.XinuCallStmt XinuCallStatement() :
 		( "," arg = Expression()  { args.add(arg); } )* ]
 	")" ";" { return new Absyn.XinuCallStmt(method.toString(), args); }
 }
-
+Absyn.AssignableExpr AssignableExpr():
+{
+	Absyn.Expr e, arg;
+	Token t, id;
+}
+{
+	  t = <ID>
+	  { Absyn.Expr result = new Absyn.IdentifierExpr(t.toString()); }
+	  (
+	      "." id = <ID> { result = new Absyn.FieldExpr(result, id.toString()); }
+	    | "[" arg = Expression() "]" { result = new Absyn.ArrayExpr(result, arg); }
+	  )*
+	  { return (Absyn.AssignableExpr) result; }
+}
 Absyn.Expr Expression() :  //Loosest to tightest
 {
 	Absyn.Expr e;
@@ -390,8 +406,22 @@ Absyn.Expr Unary() :
 {
          "-" e = Unary() {return new Absyn.NegExpr(e);}
         | "!" e = Unary() {return new Absyn.NotExpr(e);}
-        | e = Prime() {return e;}
+        | e = Postfix() {return e;}
 }
+Absyn.Expr Postfix():
+{
+	Absyn.Expr e, arg;
+	Token id;
+}
+{
+	e = Prime()
+	(
+	    "." id = <ID> { e = new Absyn.FieldExpr(e, id.toString()); }
+	  | "[" arg = Expression() "]" { e = new Absyn.ArrayExpr(e, arg); }
+	)*
+	{ return e; }
+}
+
 Absyn.Expr Prime() : 
 {
 	Token t; Absyn.Expr e, arg; Absyn.Type type; LinkedList<Absyn.Expr> args = new LinkedList<Absyn.Expr>();
@@ -400,11 +430,15 @@ Absyn.Expr Prime() :
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
 	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
 	| "null" {return new Absyn.NullExpr(); }
+	| "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
 	| "new" type = BaseType() "[" e = Expression() "]" {return new Absyn.NewArrayExpr(type,e); } //format for arrays Basetype works with []
 	| "Xinu" "." t = <ID>
         "(" [ arg = Expression() { args.add(arg); }
                 ( "," arg = Expression()  { args.add(arg); } )* ]
         ")" { return new Absyn.XinuCallExpr(t.toString(), args); } //same as other xinu but no semi colon
+	| "true" { return new Absyn.TrueExpr(); }
+	| "false" { return new Absyn.FalseExpr(); }
+	| "this" { return new Absyn.ThisExpr(); }
 	| t = <ID> {return new Absyn.IdentifierExpr(t.toString()); }
 	| "(" e = Expression() ")" {return e;}
 }

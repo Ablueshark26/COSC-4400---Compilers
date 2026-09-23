@@ -43,4 +43,12 @@ public interface Visitor
     public void visit(BlockStmt ast);
     public void visit(VoidDecl ast);
     public void visit(ThreadDecl ast);
+    public void visit(ArrayExpr ast);
+    public void visit(FieldExpr ast);
+    public void visit(ThisExpr ast);
+    public void visit(TrueExpr ast);
+    public void visit(FalseExpr ast);
+    public void visit(AssignStmt ast);
+    public void visit(CallExpr ast);
+    public void visit(NewObjectExpr ast);
 }
