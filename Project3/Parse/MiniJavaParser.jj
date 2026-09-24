@@ -33,6 +33,14 @@ SKIP :
 {
 	  " " | "\t" | "\n" | "\r" | "\f"
 }
+/****************/
+/*   Comments   */
+/****************/
+SKIP :
+{
+          < "//" (~["\n","\r"])* ("\n" | "\r" | "\r\n") >
+	| < "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/" >
+}
 
 /*************************/
 /* Lexical Specification */
@@ -412,11 +420,20 @@ Absyn.Expr Postfix():
 {
 	Absyn.Expr e, arg;
 	Token id;
+	LinkedList<Absyn.Expr> args;
 }
 {
 	e = Prime()
 	(
-	    "." id = <ID> { e = new Absyn.FieldExpr(e, id.toString()); }
+	    "." id = <ID>
+	    (
+	        "(" { args = new LinkedList<Absyn.Expr>(); }
+	          [ arg = Expression() { args.add(arg); }
+	              ( "," arg = Expression() { args.add(arg); } )* ]
+	        ")" { e = new Absyn.CallExpr(e, id.toString(), args); }
+	      |
+	        { e = new Absyn.FieldExpr(e, id.toString()); }
+	    )
 	  | "[" arg = Expression() "]" { e = new Absyn.ArrayExpr(e, arg); }
 	)*
 	{ return e; }
@@ -431,7 +448,10 @@ Absyn.Expr Prime() :
 	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
 	| "null" {return new Absyn.NullExpr(); }
 	| LOOKAHEAD(3) "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
-	| "new" type = BaseType() "[" e = Expression() "]" {return new Absyn.NewArrayExpr(type,e); } //format for arrays Basetype works with []
+	| "new" type = BaseType() "[" e = Expression() "]"
+      			{ LinkedList<Absyn.Expr> sizes = new LinkedList<Absyn.Expr>(); sizes.add(e); }
+  		( "[" "]" { sizes.add(null); } )*
+      			{ return new Absyn.NewArrayExpr(type, sizes); }
 	| "Xinu" "." t = <ID>
         "(" [ arg = Expression() { args.add(arg); }
                 ( "," arg = Expression()  { args.add(arg); } )* ]

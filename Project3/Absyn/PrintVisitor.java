@@ -209,7 +209,7 @@ public class PrintVisitor implements Visitor
             out.print("NewArrayExpr(");
             indentCount++;
             ast.type.accept(this);
-            ast.size.accept(this);
+            visit((java.util.AbstractList) ast.sizes);
             indentCount--;
             out.print(")");
     }
