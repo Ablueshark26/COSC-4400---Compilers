@@ -1,0 +1,48 @@
+Program(
+ AbstractList(
+  ClassDecl(Test null
+   AbstractList()
+   AbstractList(
+    MethodDecl(public_static_void main
+     AbstractList(
+      Formal(ArrayType(IdentifierType(String)) args))
+     AbstractList(
+      VarDecl(ArrayType(IntegerType) nums null)
+      VarDecl(ArrayType(ArrayType(IntegerType)) grid null)
+      VarDecl(IntegerType total null))
+     AbstractList(
+      AssignStmt(
+       IdentifierExpr(nums)
+       NewArrayExpr(IntegerType
+        AbstractList(
+         IntegerLiteral(5))))
+      AssignStmt(
+       IdentifierExpr(grid)
+       NewArrayExpr(IntegerType
+        AbstractList(
+         IntegerLiteral(3)
+         null)))
+      AssignStmt(
+       ArrayExpr(
+        IdentifierExpr(nums)
+        IntegerLiteral(0))
+       IntegerLiteral(10))
+      AssignStmt(
+       ArrayExpr(
+        IdentifierExpr(grid)
+        IntegerLiteral(0))
+       NewArrayExpr(IntegerType
+        AbstractList(
+         IntegerLiteral(4))))
+      AssignStmt(
+       IdentifierExpr(total)
+       AddExpr(
+        ArrayExpr(
+         IdentifierExpr(nums)
+         IntegerLiteral(0))
+        ArrayExpr(
+         ArrayExpr(
+          IdentifierExpr(grid)
+          IntegerLiteral(0))
+         IntegerLiteral(0)))))
+     IntegerLiteral(0))))))
