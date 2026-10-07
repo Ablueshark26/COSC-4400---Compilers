@@ -80,9 +80,9 @@ public class TypeChecker implements Visitor {
 
 	private static FIELD findField(CLASS c, String name) //this scans the parent to find the field
 	{
-		for(CLASS curr = c; curr != null; cur = cur.parent) //start at given class move up
+		for(CLASS curr = c; curr != null; curr = curr.parent) //start at given class move up
 		{
-			FIELD f = cur.fields.get(name);
+			FIELD f = curr.fields.get(name);
 			if (f != null) return f;
 		}
 		return null;
@@ -90,9 +90,9 @@ public class TypeChecker implements Visitor {
 
 	private static FUNCTION findFunc(CLASS c, String name) //this scans the parent to find the function. similar to first
         {
-                for(CLASS curr = c; curr != null; cur = cur.parent) //start at given class move up
+                for(CLASS curr = c; curr != null; curr = curr.parent) //start at given class move up
                 {
-                        FIELD f = cur.fields.get(name); //stores inside field
+                        FIELD f = curr.fields.get(name); //stores inside field
                         if (f != null) return (FUNCTION) f.type; 
                 }
                 return null;
@@ -103,7 +103,7 @@ public class TypeChecker implements Visitor {
         	List<Absyn> decls = (List<Absyn>) n.classes;
 
         	//The built-in superclass of every thread.
-        	CLASS thread = new CLASS("Thread", null);
+        	CLASS thread = new CLASS("Thread");
         	classes.put("Thread", thread);
 
         	//enter every class name
@@ -113,7 +113,7 @@ public class TypeChecker implements Visitor {
                 	error("duplicate class");
                 	continue;
             	}
-            	CLASS c = new CLASS(name, null);
+            	CLASS c = new CLASS(name);
             	classes.put(name, c);
             	descOf.put(d, c);
         	}
@@ -126,7 +126,7 @@ public class TypeChecker implements Visitor {
                 		c.parent = thread;
             		} 
 			else {
-                		String sup = ((ClassDecl) d).superName;
+                		String sup = ((ClassDecl) d).parent;
                 		if (sup != null) {
                     			CLASS p = classes.get(sup);
                     			if (p == null) error("cannot resolve parent class " + sup);
@@ -168,30 +168,30 @@ public class TypeChecker implements Visitor {
             		}
             		for (VarDecl f : fields) {
                 		Types.Type t = resolve(f.type);
-                		if (c.fields.containsKey(f.name)) error(f.name + " is already defined in " + c.name);
-                		else c.fields.put(f.name, new FIELD(f.name, t));
+                		if (c.fields.get(f.name)!= null) error(f.name + " is already defined in " + c.name);
+                		else c.fields.put(t, f.name);
             		}
             		for (MethodDecl m : methods) {
                 		if (m.returnType == null) continue;            // main is not a member
                 		Types.Type ret = resolve(m.returnType);
                 		List<Types.Type> ps = new ArrayList<Types.Type>();
                 		List<String> pn = new ArrayList<String>();
-                		for (Formal f : m.formals) {
+                		for (Formal f : m.params) {
                     			ps.add(resolve(f.type));
                     			pn.add(f.name);
                 		}
-                		FUNCTION fn = new FUNCTION(m.name, ret, ps, pn);
+                		FUNCTION fn = new FUNCTION(m.name, c.instance, new RECORD(), ret);
                 		fnOf.put(m, fn);
                 		if (c.methods.get(m.name) != null) error(m.name + " is already defined in " + c.name);
-                		else c.methods.put(m.name, fn);
+                		else c.methods.put(fn, m.name);
             		}
             		if (voids != null) {
                 		for (VoidDecl v : voids) {
-                    			if (c.methods.containsKey(v.name)) error(v.name + " is already defined in " + c.name);
+                    			if (c.methods.get(v.name)!= null) error(v.name + " is already defined in " + c.name);
 				
                     		else {
 					FUNCTION fn = new FUNCTION(v.name, c.instance, new RECORD(), new VOID());
-                			c.method.put(fn, v.name)
+                			c.methods.put(fn, v.name);
 				}
             		}
         	}
@@ -201,8 +201,8 @@ public class TypeChecker implements Visitor {
             		CLASS c = descOf.get(d);
             		if (c == null || c.parent == null) continue;
             		for (FIELD mf : c.methods) {
-				FUNCTION fn = (FUNCTION) f.type;
-                		FUNCTION inherited = c.parent.findFunc(c.parent, fn.name);
+				FUNCTION fn = (FUNCTION) mf.type;
+                		FUNCTION inherited = findFunc(c.parent, fn.name);
                 		if (inherited != null && !inherited.coerceTo(fn))
                     			error("incompatible method override: " + fn.name + " in class " + c.name);
             		}
@@ -271,7 +271,7 @@ public class TypeChecker implements Visitor {
 	
 		public void visit(IntegerType n) { result = new INT(); }
     		public void visit(BooleanType n) { result = new BOOLEAN(); }
-    		public void visit(ArrayType n) { result = new ARRAY(resolve(n.elementType)); }
+    		public void visit(ArrayType n) { result = new ARRAY(resolve(n.base)); }
 
     		public void visit(IdentifierType n) {
         		if (n.id.equals("String")) { result = new STRING(); return; }
@@ -305,8 +305,8 @@ public class TypeChecker implements Visitor {
     		}
 
     		public void visit(AssignStmt n) {
-        		Types.Type l = check(n.target);
-        		Types.Type r = check(n.value);
+        		Types.Type l = check(n.lhs);
+        		Types.Type r = check(n.rhs);
         		expect(l, r);
     		}
 
@@ -370,7 +370,7 @@ public class TypeChecker implements Visitor {
     		public void visit(IdentifierExpr n) {
         		Types.Type t = vars.get(n.name);
         		if (t == null) {
-            			FIELD f = cur.findField(n.name);
+            			FIELD f = findField(cur, n.name);
             			if (f != null) t = f.type;
         		}
         		if (t == null) {	
@@ -427,7 +427,7 @@ public class TypeChecker implements Visitor {
         		List<Types.Type> ats = new ArrayList<Types.Type>();
         		for (Expr a : n.args) ats.add(check(a));
         		if (fn != null) {
-            			if (ats.size() != fn.params.size()) {
+            			if (ats.size() != fn.formals.size()) {
                 			error("mismatch in number of arguments");
             			} 
 				else {
