@@ -1,4 +1,4 @@
-/* Copyright (C) 2007, 2013, Marquette University.  All rights reserved. */
+/* Copyright (C) 2006, 2013, Marquette University.  All rights reserved. */
 /* 2013 Jan 30 : Includes Xinu.* external calls and Concurrency syntax.  */
  /**
   2  * COSC 4400 - Project #3
@@ -450,7 +450,7 @@ Absyn.Expr Prime() :
 	| LOOKAHEAD(3) "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
 	| "new" type = BaseType() "[" e = Expression() "]"
       			{ LinkedList<Absyn.Expr> sizes = new LinkedList<Absyn.Expr>(); sizes.add(e); }
-  		( "[" "]" { sizes.add(null); } )*
+  		( LOOKAHEAD(2) "[" "]" { sizes.add(null); } )*
       			{ return new Absyn.NewArrayExpr(type, sizes); }
 	| "Xinu" "." t = <ID>
         "(" [ arg = Expression() { args.add(arg); }
@@ -462,6 +462,7 @@ Absyn.Expr Prime() :
 	| t = <ID> {return new Absyn.IdentifierExpr(t.toString()); }
 	| "(" e = Expression() ")" {return e;}
 }
+
 
 
 Absyn.Stmt IfState() : //checks format of if cond + statement + else

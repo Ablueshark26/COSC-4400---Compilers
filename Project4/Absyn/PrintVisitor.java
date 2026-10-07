@@ -333,7 +333,7 @@ public class PrintVisitor implements Visitor
            indentCount--;
            out.print(")");
     }
-d
+
     public void visit(NewObjectExpr ast) {
            indent();
            out.print("NewObjectExpr(IdentifierType(" + ast.className + "))");
