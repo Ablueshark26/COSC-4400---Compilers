@@ -1,49 +1,16 @@
 Program(
  AbstractList(
-  ClassDecl(NewObject null
+  ClassDecl(Test null
    AbstractList()
    AbstractList(
     MethodDecl(public_static_void main
      AbstractList(
-      Formal(ArrayType(IdentifierType(String)) args))
+      Formal(ArrayType(IdentifierType(String)) a))
      AbstractList(
-      VarDecl(IdentifierType(Test) a
-      NewObjectExpr(IdentifierType(Test))))
-     AbstractList(
-      XinuCallStmt(println
-       AbstractList(
-        CallExpr(
-         IdentifierExpr(a)
-         Get
-         AbstractList())))
-      XinuCallStmt(println
-       AbstractList(
-        FieldExpr(
-         IdentifierExpr(a)
-         value)))
-      XinuCallStmt(println
-       AbstractList(
-        CallExpr(
-         NewObjectExpr(IdentifierType(Test))
-         Get
-         AbstractList()))))
+      VarDecl(IdentifierType(A) x null))
+     AbstractList()
      IntegerLiteral(0))))
-  ClassDecl(Test null
+  ClassDecl(A B
    AbstractList(
-    VarDecl(IntegerType value null))
-   AbstractList(
-    MethodDecl(IntegerType CallGet
-     AbstractList()
-     AbstractList()
-     AbstractList()
-     CallExpr(
-      ThisExpr
-      GetVal
-      AbstractList()))
-    MethodDecl(IntegerType GetVal
-     AbstractList()
-     AbstractList()
-     AbstractList()
-     FieldExpr(
-      ThisExpr
-      value))))))
+    VarDecl(IntegerType test null))
+   AbstractList())))

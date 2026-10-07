@@ -10,11 +10,13 @@ import Types.FUNCTION;
 import Types.INT;
 import Types.NIL;
 import Types.OBJECT;
+import Types.RECORD;
 import Types.STRING;
 import Types.VOID;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,9 +78,29 @@ public class TypeChecker implements Visitor {
         	return t instanceof OBJECT || t instanceof ARRAY || t instanceof NIL;
     	}
 
+	private static FIELD findField(CLASS c, String name) //this scans the parent to find the field
+	{
+		for(CLASS curr = c; curr != null; cur = cur.parent) //start at given class move up
+		{
+			FIELD f = cur.fields.get(name);
+			if (f != null) return f;
+		}
+		return null;
+	}
+
+	private static FUNCTION findFunc(CLASS c, String name) //this scans the parent to find the function. similar to first
+        {
+                for(CLASS curr = c; curr != null; cur = cur.parent) //start at given class move up
+                {
+                        FIELD f = cur.fields.get(name); //stores inside field
+                        if (f != null) return (FUNCTION) f.type; 
+                }
+                return null;
+        }
+
 	//Build 
 	public void visit(Program n) {
-        	List<Absyn> decls = n.decls;
+        	List<Absyn> decls = (List<Absyn>) n.classes;
 
         	//The built-in superclass of every thread.
         	CLASS thread = new CLASS("Thread", null);
@@ -160,23 +182,28 @@ public class TypeChecker implements Visitor {
                 		}
                 		FUNCTION fn = new FUNCTION(m.name, ret, ps, pn);
                 		fnOf.put(m, fn);
-                		if (c.methods.containsKey(m.name)) error(m.name + " is already defined in " + c.name);
+                		if (c.methods.get(m.name) != null) error(m.name + " is already defined in " + c.name);
                 		else c.methods.put(m.name, fn);
             		}
             		if (voids != null) {
                 		for (VoidDecl v : voids) {
                     			if (c.methods.containsKey(v.name)) error(v.name + " is already defined in " + c.name);
-                    		else c.methods.put(v.name, new FUNCTION(v.name, new VOID(),(new ArrayList<Types.Type>(), new ArrayList<String>()));
-                		}
+				
+                    		else {
+					FUNCTION fn = new FUNCTION(v.name, c.instance, new RECORD(), new VOID());
+                			c.method.put(fn, v.name)
+				}
             		}
         	}
+		}
 		//overrides must keep the signature
         	for (Absyn d : decls) {
             		CLASS c = descOf.get(d);
             		if (c == null || c.parent == null) continue;
-            		for (FUNCTION fn : c.methods.values()) {
-                		FUNCTION inherited = c.parent.lookupMethod(fn.name);
-                		if (inherited != null && !inherited.sameSignature(fn))
+            		for (FIELD mf : c.methods) {
+				FUNCTION fn = (FUNCTION) f.type;
+                		FUNCTION inherited = c.parent.findFunc(c.parent, fn.name);
+                		if (inherited != null && !inherited.coerceTo(fn))
                     			error("incompatible method override: " + fn.name + " in class " + c.name);
             		}
         	}
@@ -191,11 +218,11 @@ public class TypeChecker implements Visitor {
     	private static String nameOf(Absyn d) {
         	return d instanceof ClassDecl ? ((ClassDecl) d).name : ((ThreadDecl) d).name;
     	}
-
+		public void visit(java.util.AbstractList<Visitable> list){} //needed to reference later
+									     
 		//Declarations
 		public void visit(ClassDecl n) {
         		cur = descOf.get(n);
-        		for (VarDecl f : n.fields) { /* field types were resolved in pass 1 */ }
         		for (MethodDecl m : n.methods) m.accept(this);
     		}
 
@@ -221,14 +248,12 @@ public class TypeChecker implements Visitor {
     		public void visit(MethodDecl n) {
         		FUNCTION fn = fnOf.get(n);          // null for main
         		vars.beginScope();
-        		for (int i = 0; i < n.formals.size(); i++) {
-            			Formal f = n.formals.get(i);
-            			Types.Type pt = (fn != null) ? fn.params.get(i) : resolve(f.type);
-            			declare(f.name, pt, n.name);
-        		}
+        		for (Formal f: n.params) {
+				declare(f.name, resolve(f.type), n.name);
+			}
         		declareLocals(n.locals, n.name);
-        		for (Stmt s : n.body) s.accept(this);
-        		if (fn != null) expect(fn.result, check(n.returnExpr));
+        		for (Stmt s : n.stmts) s.accept(this);
+        		if (fn != null) expect(fn.result, check(n.returnVal));
         		vars.endScope();
     		}
 
@@ -249,10 +274,10 @@ public class TypeChecker implements Visitor {
     		public void visit(ArrayType n) { result = new ARRAY(resolve(n.elementType)); }
 
     		public void visit(IdentifierType n) {
-        		if (n.name.equals("String")) { result = new STRING(); return; }
-        		CLASS c = classes.get(n.name);
+        		if (n.id.equals("String")) { result = new STRING(); return; }
+        		CLASS c = classes.get(n.id);
         		if (c == null) {
-            			error("cannot resolve class " + n.name);
+            			error("cannot resolve class " + n.id);
             			result = errType();
         		} 
 			else {
@@ -280,8 +305,8 @@ public class TypeChecker implements Visitor {
     		}
 
     		public void visit(AssignStmt n) {
-        		Types.Type l = check(n.lhs);
-        		Types.Type r = check(n.rhs);
+        		Types.Type l = check(n.target);
+        		Types.Type r = check(n.value);
         		expect(l, r);
     		}
 
@@ -292,8 +317,8 @@ public class TypeChecker implements Visitor {
 		//Operators
 	
 		private void arith(BinOpExpr n, String op, Types.Type operand, Types.Type res) {
-        		Types.Type l = check(n.left);
-        		Types.Type r = check(n.right);
+        		Types.Type l = check(n.e1);
+        		Types.Type r = check(n.e2);
         		if (!ok(l, operand) || !ok(r, operand))
             		error("operator " + op + " cannot be applied to " + l + ", " + r);
         		result = res;
@@ -309,8 +334,8 @@ public class TypeChecker implements Visitor {
     		public void visit(LesserExpr n) { arith(n, "<", new INT(), new BOOLEAN()); }
 
     		private void equality(BinOpExpr n, String op) {
-        		Types.Type l = check(n.left);
-        		Types.Type r = check(n.right);
+        		Types.Type l = check(n.e1);
+        		Types.Type r = check(n.e2);
         		boolean good = isErr(l) || isErr(r)
             		|| (isRef(l) && isRef(r) && (l.coerceTo(r) || r.coerceTo(l)))
             		|| (!isRef(l) && !isRef(r) && l.equals(r));
@@ -345,7 +370,7 @@ public class TypeChecker implements Visitor {
     		public void visit(IdentifierExpr n) {
         		Types.Type t = vars.get(n.name);
         		if (t == null) {
-            			FIELD f = cur.lookupField(n.name);
+            			FIELD f = cur.findField(n.name);
             			if (f != null) t = f.type;
         		}
         		if (t == null) {	
@@ -364,7 +389,7 @@ public class TypeChecker implements Visitor {
             			result = errType();
             			return;
         		}
-        		FIELD f = ((OBJECT) ot).cls.lookupField(n.field);
+        		FIELD f = findField(((OBJECT) ot).myClass, n.field);
         		if (f == null) {
             			error("cannot resolve symbol " + n.field);
             			result = errType();
@@ -394,7 +419,7 @@ public class TypeChecker implements Visitor {
         		Types.Type ot = check(n.object);
         		FUNCTION fn = null;
         		if (ot instanceof OBJECT) {
-            			fn = ((OBJECT) ot).cls.lookupMethod(n.method);
+            			fn = findFunc(((OBJECT) ot).myClass, n.method);
             			if (fn == null) error("cannot resolve method " + n.method);
         		} else if (!isErr(ot)) {
             			error("target not object, type " + ot);
@@ -406,7 +431,11 @@ public class TypeChecker implements Visitor {
                 			error("mismatch in number of arguments");
             			} 
 				else {
-                			for (int i = 0; i < ats.size(); i++) expect(fn.params.get(i), ats.get(i));
+					Iterator<FIELD> it = fn.formals.iterator();
+                			for (Types.Type at : ats){
+						FIELD pf = it.next();
+						expect(pf.type,at);
+				        }
             			}
         		}
         		result = (fn != null) ? fn.result : errType();
