@@ -38,7 +38,7 @@ public class Table<V>
 	
 	public void endScope(){
 		if (scopes.size() <= 1){
-			throw new IllegalStateExcrption("endScope with no matching beginScope");
+			throw new IllegalStateException("endScope with no matching beginScope");
 		}
 		for (String name : scopes.pop()) {
 			Deque<V> stack = bindings.get(name);
