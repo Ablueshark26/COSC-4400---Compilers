@@ -294,7 +294,8 @@ public class PrintVisitor implements Visitor
            out.print("FieldExpr(");
            indentCount++;
            ast.object.accept(this);
-           out.print(" " + ast.field);
+           indent();
+	   out.print(ast.field);
            indentCount--;
            out.print(")");
     }
@@ -326,14 +327,15 @@ public class PrintVisitor implements Visitor
            out.print("CallExpr(");
            indentCount++;
            ast.object.accept(this);
-           out.print(" " + ast.method);
+	   indent();
+           out.print(ast.method);
            visit((java.util.AbstractList) ast.args);
            indentCount--;
            out.print(")");
     }
-
+d
     public void visit(NewObjectExpr ast) {
            indent();
-           out.print("NewObjectExpr(" + ast.className + ")");
+           out.print("NewObjectExpr(IdentifierType(" + ast.className + "))");
     }
 }
