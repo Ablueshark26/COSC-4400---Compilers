@@ -5,28 +5,32 @@
  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
  */
 package Semant;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import Absyn.Program;
-
+ 
+import java.io.Reader;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+ 
 public class Main
 {
     public static void main(String[] args)
     {
-        InputStream in = System.in;
+        InputStreamReader isr = new InputStreamReader(System.in);
+        Reader reader = new BufferedReader(isr);
+ 
         try
         {
-            if (args.length > 0)
-                in = new FileInputStream(args[0]);
+            Absyn.Program prog = new Parse.MiniJavaParser(reader).Goal();
+            TypeChecker tc = new TypeChecker();
+            tc.visit(prog);
+            PrintWriter pw = new PrintWriter(System.out);
+            tc.printClasses(pw);
         }
-        catch (IOException e)
+        catch (Parse.ParseException p)
         {
-            System.err.println("Cannot open " + args[0] + ": " + e.getMessage());
-            System.exit(1);
+            System.out.println(p.toString());
+            System.exit(-1);
         }
-        //find way to feed absyn to type checker
     }
 }
+ 

@@ -42,7 +42,8 @@ public class TypeChecker implements Visitor {
 
     	private CLASS cur;              // class whose members are being checked
     	private Types.Type result;      // result of the last expression/type visited
-    	int errors = 0;
+    	private List <Absyn> lastDecls; // for print later
+	int errors = 0;
 	
 	//Helpers
 	private void error(String msg) {
@@ -101,6 +102,7 @@ public class TypeChecker implements Visitor {
 	//Build 
 	public void visit(Program n) {
         	List<Absyn> decls = (List<Absyn>) n.classes;
+		lastDecls = decls;
 
         	//The built-in superclass of every thread.
         	CLASS thread = new CLASS("Thread");
@@ -196,6 +198,18 @@ public class TypeChecker implements Visitor {
             		}
         	}
 		}
+		for (Absyn d : decls) {
+			CLASS c = descOf.get(d);
+			if (c == null) continue;
+			java.util.LinkedList<CLASS> chain = new java.util.LinkedList<CLASS>();
+			for (CLASS p = c; p != null; p = p.parent) chain.addFirst(p);
+			for (CLASS p : chain) {
+				for (FIELD f : p.fields) c.instance.fields.put(f.type, f.name);
+				for (FIELD m : p.methods) c.instance.methods.put(m.type, m.name);
+			}
+		}
+
+
 		//overrides must keep the signature
         	for (Absyn d : decls) {
             		CLASS c = descOf.get(d);
@@ -213,7 +227,21 @@ public class TypeChecker implements Visitor {
             		if (descOf.get(d) != null) d.accept(this);
         	}
     	}
+	public void printClasses(java.io.PrintWriter pw) {
+		printClasses(pw, lastDecls);
+	}
 
+	public void printClasses(java.io.PrintWriter pw, List<Absyn> decls) {
+		Types.PrintVisitor pv = new Types.PrintVisitor(pw);
+		for (Absyn d : decls) {
+			CLASS c = descOf.get(d);
+			if (c == null) continue;
+			pv.visit(c);
+			pw.println();
+			pw.println();
+		}
+		pw.flush();
+	}
 
     	private static String nameOf(Absyn d) {
         	return d instanceof ClassDecl ? ((ClassDecl) d).name : ((ThreadDecl) d).name;

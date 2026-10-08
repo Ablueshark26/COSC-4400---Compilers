@@ -1,7 +1,7 @@
 package Absyn;
 
 public class BinOpExpr extends Expr{
-	Expr e1, e2;
+	public Expr e1, e2;
 	public BinOpExpr(Expr e1, Expr e2)
 {
 	this.e1 = e1;
