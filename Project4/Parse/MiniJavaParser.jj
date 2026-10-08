@@ -134,7 +134,7 @@ SKIP :
 /********************/
 
 // MainClass 	::= 	"class" Identifier "{" "public" "static" "void" "main" "(" "String" "[" "]" Identifier ")" "{" Statement "}" "}"
-Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.Absyn> cl) :
+Absyn.ClassDecl MainClassDeclaration(LinkedList<Absyn.ClassDecl> cl) :
 {
 	Absyn.ClassDecl  cd;
 	Absyn.Stmt stmt;
@@ -180,7 +180,7 @@ Absyn.VarDecl VarDeclaration() :
 	{ return new Absyn.VarDecl(type, name.toString(), init); }
 }
 // Field Decleration Type <ID> ";"
-Absyn.VarDecl FieldDeclaration():
+Absyn.VarDecl FieldDecl():
 {
 	Absyn.Type type;
 	Token name;
@@ -236,12 +236,11 @@ Absyn.VoidDecl VoidDeclaration() :
 
 // ClassDeclaration  ::= "class" <ID> ( "extends" <ID> )? "{" ( FieldDeclaration | MethodDeclaration )* "}"
 // ThreadDeclaration ::= "class" <ID> "extends" "Thread" "{" ( FieldDeclaration | MethodDeclaration | VoidDeclaration )* "}"
-Absyn.Absyn ClassOrThreadDeclaration() :
+Absyn.ClassDecl ClassOrThreadDeclaration() :
 {
 	Token name, parentId = null;
-	LinkedList<Absyn.VarDecl> fields       = new LinkedList<Absyn.VarDecl>();
-	LinkedList<Absyn.MethodDecl> methods   = new LinkedList<Absyn.MethodDecl>();
-	LinkedList<Absyn.VoidDecl> voidMethods = new LinkedList<Absyn.VoidDecl>();
+	LinkedList<Absyn.VarDecl> fields     = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.MethodDecl> methods = new LinkedList<Absyn.MethodDecl>();
 	Absyn.VarDecl field;
 	Absyn.MethodDecl method;
 	Absyn.VoidDecl vmethod;
@@ -251,15 +250,15 @@ Absyn.Absyn ClassOrThreadDeclaration() :
 	(
 	    LOOKAHEAD("extends" "Thread")
 	    "extends" "Thread" "{"
-	    (   field = FieldDeclaration()              { fields.add(field); }
-	      | LOOKAHEAD(2) vmethod = VoidDeclaration() { voidMethods.add(vmethod); }
+	    (   field = FieldDecl()                    { fields.add(field); }
+	      | LOOKAHEAD(2) vmethod = VoidDeclaration() { methods.add(vmethod); }
 	      | method = MethodDeclaration()             { methods.add(method); }
 	    )*
 	    "}"
-	    { return new Absyn.ThreadDecl(name.toString(), fields, methods, voidMethods); }
+	    { return new Absyn.ThreadDecl(name.toString(), fields, methods); }
 
 	  | [ "extends" parentId = <ID> ] "{"
-	    (   field = FieldDeclaration()  { fields.add(field); }
+	    (   field = FieldDecl()  { fields.add(field); }
 	      | method = MethodDeclaration() { methods.add(method); }
 	    )*
 	    "}"
@@ -267,17 +266,20 @@ Absyn.Absyn ClassOrThreadDeclaration() :
 	              (parentId == null ? null : parentId.toString()), fields, methods); }
 	)
 }
+
+
+
 // Goal         ::=     MainClass ( ClassDeclaration | ThreadDeclaration )* <EOF>
 Absyn.Program Goal() :
 {
-        LinkedList<Absyn.Absyn> cl = new LinkedList<Absyn.Absyn>();
-        Absyn.Absyn decl;
+	LinkedList<Absyn.ClassDecl> cl = new LinkedList<Absyn.ClassDecl>();
+	Absyn.ClassDecl decl;
 }
-{               
+{
 	MainClassDeclaration(cl)
-	(decl = ClassOrThreadDeclaration() { cl.add(decl); } )*             
-	<EOF>                                                             
-	{ return new Absyn.Program(cl); }                                   
+	( decl = ClassOrThreadDeclaration() { cl.add(decl); } )*
+	<EOF>
+	{ return new Absyn.Program(cl); }
 }
 
 Absyn.Type Type() :
@@ -447,7 +449,7 @@ Absyn.Expr Prime() :
 	t = <STRING> {return new Absyn.StringLiteral(t.toString());}
 	| t = <INT> {return new Absyn.IntegerLiteral(Integer.parseInt(t.image));}
 	| "null" {return new Absyn.NullExpr(); }
-	| LOOKAHEAD(3) "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(t.toString()); }
+	| LOOKAHEAD(3) "new" t = <ID> "(" ")"   {return new Absyn.NewObjectExpr(new Absyn.IdentifierType(t.toString())); }
 	| "new" type = BaseType() "[" e = Expression() "]"
       			{ LinkedList<Absyn.Expr> sizes = new LinkedList<Absyn.Expr>(); sizes.add(e); }
   		( LOOKAHEAD(2) "[" "]" { sizes.add(null); } )*

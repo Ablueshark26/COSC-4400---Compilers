@@ -5,7 +5,7 @@
  * TA-BOT:MAILTO samuel.biskupic@marquette.edu
  */
 package Semant;
- 
+
 import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -20,17 +20,16 @@ public class Main
  
         try
         {
-            Absyn.Program prog = new Parse.MiniJavaParser(reader).Goal();
+            Absyn.Program prog = new ReadAbsyn(reader).Program();
             TypeChecker tc = new TypeChecker();
             tc.visit(prog);
             PrintWriter pw = new PrintWriter(System.out);
             tc.printClasses(pw);
         }
-        catch (Parse.ParseException p)
+        catch (ParseException p)
         {
             System.out.println(p.toString());
             System.exit(-1);
         }
     }
-}
- 
+} 

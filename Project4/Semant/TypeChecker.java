@@ -42,7 +42,7 @@ public class TypeChecker implements Visitor {
 
     	private CLASS cur;              // class whose members are being checked
     	private Types.Type result;      // result of the last expression/type visited
-    	private List <Absyn> lastDecls; // for print later
+    	private List <ClassDecl> lastDecls; // for print later
 	int errors = 0;
 	
 	//Helpers
@@ -101,7 +101,7 @@ public class TypeChecker implements Visitor {
 
 	//Build 
 	public void visit(Program n) {
-        	List<Absyn> decls = (List<Absyn>) n.classes;
+        	List<ClassDecl> decls = n.classes;
 		lastDecls = decls;
 
         	//The built-in superclass of every thread.
@@ -153,51 +153,26 @@ public class TypeChecker implements Visitor {
             		}
         	}
 		//fields and methods
-        	for (Absyn d : decls) {
-            		CLASS c = descOf.get(d);
-            		if (c == null) continue;
-            		List<VarDecl> fields;
-            		List<MethodDecl> methods;
-            		List<VoidDecl> voids = null;
-            		if (d instanceof ClassDecl) {
-                		fields = ((ClassDecl) d).fields;
-                		methods = ((ClassDecl) d).methods;
-            		} 
-			else {
-                		fields = ((ThreadDecl) d).fields;
-                		methods = ((ThreadDecl) d).methods;
-                		voids = ((ThreadDecl) d).voidMethods;
-            		}
-            		for (VarDecl f : fields) {
-                		Types.Type t = resolve(f.type);
-                		if (c.fields.get(f.name)!= null) error(f.name + " is already defined in " + c.name);
-                		else c.fields.put(t, f.name);
-            		}
-            		for (MethodDecl m : methods) {
-                		if (m.returnType == null) continue;            // main is not a member
-                		Types.Type ret = resolve(m.returnType);
-                		List<Types.Type> ps = new ArrayList<Types.Type>();
-                		List<String> pn = new ArrayList<String>();
-                		for (Formal f : m.params) {
-                    			ps.add(resolve(f.type));
-                    			pn.add(f.name);
-                		}
-                		FUNCTION fn = new FUNCTION(m.name, c.instance, new RECORD(), ret);
-                		fnOf.put(m, fn);
-                		if (c.methods.get(m.name) != null) error(m.name + " is already defined in " + c.name);
-                		else c.methods.put(fn, m.name);
-            		}
-            		if (voids != null) {
-                		for (VoidDecl v : voids) {
-                    			if (c.methods.get(v.name)!= null) error(v.name + " is already defined in " + c.name);
-				
-                    		else {
-					FUNCTION fn = new FUNCTION(v.name, c.instance, new RECORD(), new VOID());
-                			c.methods.put(fn, v.name);
-				}
-            		}
-        	}
-		}
+		for (Absyn d : decls) {
+   			CLASS c = descOf.get(d);
+    			if (c == null) continue;
+    			ClassDecl cd = (ClassDecl) d;   // works for plain classes AND threads now
+  			for (VarDecl f : cd.fields) {
+        		    Types.Type t = resolve(f.type);
+        		    if (c.fields.get(f.name) != null) error(f.name + " is already defined in " + c.name);
+        		    else c.fields.put(t, f.name);
+    			}
+    			for (MethodDecl m : cd.methods) {
+        		    Types.Type ret = (m.returnType == null) ? new VOID() : resolve(m.returnType);
+        		    FUNCTION fn = new FUNCTION(m.name, c.instance, new RECORD(), ret);
+        		    for (Formal f : m.params) fn.addFormal(resolve(f.type), f.name);
+        	     	    fnOf.put(m, fn);
+        		    if (c.methods.get(m.name) != null) error(m.name + " is already defined in " + c.name);
+        		    else c.methods.put(fn, m.name);
+    }
+}
+		
+		
 		for (Absyn d : decls) {
 			CLASS c = descOf.get(d);
 			if (c == null) continue;
@@ -231,7 +206,7 @@ public class TypeChecker implements Visitor {
 		printClasses(pw, lastDecls);
 	}
 
-	public void printClasses(java.io.PrintWriter pw, List<Absyn> decls) {
+	public void printClasses(java.io.PrintWriter pw, List<ClassDecl> decls) {
 		Types.PrintVisitor pv = new Types.PrintVisitor(pw);
 		for (Absyn d : decls) {
 			CLASS c = descOf.get(d);
@@ -257,7 +232,6 @@ public class TypeChecker implements Visitor {
     		public void visit(ThreadDecl n) {
         		cur = descOf.get(n);
         		for (MethodDecl m : n.methods) m.accept(this);
-        		for (VoidDecl v : n.voidMethods) v.accept(this);
     		}
 
     		private void declare(String name, Types.Type t, String owner) {
@@ -286,11 +260,11 @@ public class TypeChecker implements Visitor {
     		}
 
     	public void visit(VoidDecl n) {
-        	vars.beginScope();
-        	declareLocals(n.locals, n.name);
-        	for (Stmt s : n.body) s.accept(this);
-        	vars.endScope();
-    	}
+		vars.beginScope();
+    		declareLocals(n.locals, n.name);
+    		for (Stmt s : n.stmts) s.accept(this);   // was n.body
+    		vars.endScope();	
+	}
 
     	public void visit(VarDecl n) { }
     	public void visit(Formal n) { }
@@ -484,14 +458,7 @@ public class TypeChecker implements Visitor {
     		}
 
 		public void visit(NewObjectExpr n) {
-        		CLASS c = classes.get(n.className);
-        		if (c == null) {
-            			error("cannot resolve class " + n.className);
-            			result = errType();
-        		} 
-			else {
-            			result = new OBJECT(c);
-        		}
+        		result = resolve(n.type);
     		}
 
 }

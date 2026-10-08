@@ -6,11 +6,25 @@ Program(
     MethodDecl(public_static_void main
      AbstractList(
       Formal(ArrayType(IdentifierType(String)) a))
-     AbstractList(
-      VarDecl(IdentifierType(A) x null))
+     AbstractList()
      AbstractList()
      IntegerLiteral(0))))
-  ClassDecl(A B
+  ClassDecl(A null
    AbstractList(
-    VarDecl(IntegerType test null))
-   AbstractList())))
+    VarDecl(IntegerType x null))
+   AbstractList(
+    MethodDecl(IntegerType giveY
+     AbstractList(
+      Formal(IntegerType y))
+     AbstractList()
+     AbstractList()
+     IdentifierExpr(y))))
+  ClassDecl(B A
+   AbstractList()
+   AbstractList(
+    MethodDecl(IntegerType giveY
+     AbstractList(
+      Formal(IntegerType y))
+     AbstractList()
+     AbstractList()
+     IdentifierExpr(y))))))
