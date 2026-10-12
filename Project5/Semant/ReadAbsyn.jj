@@ -1,0 +1,782 @@
+/* Copyright (C) 2007-2013, Marquette University.  All rights reserved. */
+//options { DEBUG_PARSER=true; DEBUG_LOOKAHEAD=true; 
+PARSER_BEGIN(ReadAbsyn)
+package Semant;
+import java.util.LinkedList;
+public class ReadAbsyn {
+} 
+PARSER_END(ReadAbsyn)
+
+/**************************************************
+ * The MiniJava language lexical spec starts here *
+ **************************************************/
+
+TOKEN_MGR_DECLS :
+{
+    static boolean anyErrors = false;
+    static void error(String msg) {
+        anyErrors = true;
+	System.err.println(msg + ": line " + input_stream.getEndLine()
+			   + ", column " + input_stream.getEndColumn());
+    }
+}
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " " | "\t" | "\n" | "\r" | "\f"
+}
+
+/* RESERVED WORDS, OPERATORS, etc  */
+
+TOKEN : 
+{
+  < "(" >
+| < ")" >
+| < "Absyn" >
+| < "AddExpr" >
+| < "AndExpr" >
+| < "ArrayExpr" >
+| < "ArrayType" >
+| < "AssignableExpr" >
+| < "AssignStmt" >
+| < "BinOpExpr" >
+| < "BlockStmt" >
+| < "BooleanType" >
+| < "CallExpr" >
+| < "ClassDecl" >
+| < "DivExpr" >
+| < "EqualExpr" >
+| < "Expr" >
+| < "FalseExpr" >
+| < "FieldExpr" >
+| < "Formal" >
+| < "GreaterExpr" >
+| < "IdentifierExpr" >
+| < "IdentifierType" >
+| < "IfStmt" >
+| < "IntegerLiteral" >
+| < "IntegerType" >
+| < "LesserExpr" >
+| < "MethodDecl" >
+| < "MulExpr" >
+| < "NegExpr" >
+| < "NewArrayExpr" >
+| < "NewObjectExpr" >
+| < "NotEqExpr" >
+| < "NotExpr" >
+| < "NullExpr" >
+| < "OrExpr" >
+| < "Program" >
+| < "Stmt" >
+| < "StringLiteral" >
+| < "SubExpr" >
+| < "ThisExpr" >
+| < "ThreadDecl" >
+| < "TrueExpr" >
+| < "Type" >
+| < "VarDecl" >
+| < "VoidDecl" >
+| < "WhileStmt" >
+| < "XinuCallExpr" >
+| < "XinuCallStmt" >
+| < "public_static_void" >
+| < "Thread" >
+| < "synchronized" >	   
+| < "AbstractList" >
+| < "null" >
+}
+
+/* COMMENTS */
+
+MORE :
+{
+  "//" : IN_SINGLE_LINE_COMMENT
+| <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+| "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+  < INT: ( ["1"-"9"] (["0"-"9"])* | "0" )  >
+| < OCT: ( "0"["0"-"7"] (["0"-"7"])* ) >
+| < HEX: ( "0x"(["0"-"9"]|["A"-"F"]|["a"-"f"]) (["0"-"9"]|["A"-"F"]|["a"-"f"])*) >
+
+| < STRING:
+ "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < ID: <LETTER> (<LETTER>|<DIGIT>)* >
+| < #LETTER: ["A"-"Z","a"-"z","_","$"] >
+| < #DIGIT: ["0"-"9"] >
+}
+
+<DEFAULT>
+SKIP :
+{
+   <~[]> { error("Illegal token"); }
+}
+
+/**************************************************
+ * The MiniJava language grammar starts here      *
+ **************************************************/
+
+//Program(AbstractList<ClassDecl> classes)
+Absyn.Program Program () :
+{
+    LinkedList<Absyn.ClassDecl> cl = new LinkedList<Absyn.ClassDecl>();
+}
+{
+    "Program" "("
+		"AbstractList" "(" ( ClassDecl(cl) | ThreadDecl(cl) )*
+	")"
+    ")"
+    <EOF>
+    { return new Absyn.Program(cl); }
+}
+
+
+//ClassDecl(String name, String parent, LinkedList<VarDecl> fields, LinkedList<MethodDecl> methods)
+void ClassDecl(LinkedList<Absyn.ClassDecl> cl) :
+{
+	Token name = null, parent = null;
+	String parentName;
+	LinkedList<Absyn.VarDecl> vl = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.MethodDecl> ml = new LinkedList<Absyn.MethodDecl>();
+}
+{
+	"ClassDecl" "(" name = <ID> 
+	( "null" | parent = <ID> )
+	       "AbstractList" "(" (VarDecl(vl))*
+	       ")"
+	       "AbstractList" "("
+	       (MethodDecl(ml))*
+	       ")"
+	")"
+	{
+		if (null == parent) parentName = null;
+		else parentName = parent.toString();
+		cl.add(new Absyn.ClassDecl(name.toString(), parentName, vl, ml));
+	}
+}
+
+//ThreadDecl(String name, LinkedList<VarDecl> fields, LinkedList<MethodDecl> methods)
+void ThreadDecl(LinkedList<Absyn.ClassDecl> cl) :
+{
+	Token name = null;
+	LinkedList<Absyn.VarDecl> vl = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.MethodDecl> ml = new LinkedList<Absyn.MethodDecl>();
+}
+{
+	"ThreadDecl" "(" name = <ID> "Thread"
+	       "AbstractList" "(" (VarDecl(vl))*
+	       ")"
+	       "AbstractList" "("
+		(MethodDecl(ml) | VoidDecl(ml))*
+	       ")"
+	")"
+	{
+		cl.add(new Absyn.ThreadDecl(name.toString(), vl, ml));
+	}
+}
+
+//MethodDecl(Type returnType, String name,
+//		      LinkedList<Formal> params,
+//		      LinkedList<VarDecl> locals,
+//		      LinkedList<Stmt> stmts,
+//		      Expr returnVal)
+void MethodDecl(LinkedList<Absyn.MethodDecl> ml) :
+{
+	Absyn.Type type = null;
+	Token name;
+	Absyn.Formal  param = null;
+	Absyn.Stmt    stmt  = null;
+	Absyn.Expr    expr  = null;
+	boolean sync = false;
+	LinkedList<Absyn.Formal> params   = new LinkedList<Absyn.Formal>();
+	LinkedList<Absyn.VarDecl> locals  = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.Stmt> stmts      = new LinkedList<Absyn.Stmt>();
+}
+{
+	"MethodDecl" "("
+	("public_static_void" | type = Type())
+	 [ "synchronized" { sync = true; } ]
+	 name = <ID>
+	     "AbstractList" "(" ( param = Formal() { params.add(param); } )*
+	     ")"
+	     "AbstractList" "(" ( VarDecl(locals) )*
+	     ")"
+	     "AbstractList" "("	( stmt  = Stmt() { stmts.add(stmt); } )*
+	     ")"
+	     expr = Expr()
+	")"
+		{ ml.add(new Absyn.MethodDecl(type, sync, name.toString(),
+	  	     			    params, locals, stmts, expr)); }
+}
+
+//VoidDecl(String name,
+//		      LinkedList<VarDecl> locals,
+//		      LinkedList<Stmt> stmts)
+void VoidDecl(LinkedList<Absyn.MethodDecl> ml) :
+{
+	Token name;
+	Absyn.Stmt    stmt  = null;
+	LinkedList<Absyn.VarDecl> locals  = new LinkedList<Absyn.VarDecl>();
+	LinkedList<Absyn.Stmt> stmts      = new LinkedList<Absyn.Stmt>();
+}
+{
+	"VoidDecl" "("
+	 name = <ID>
+	     "AbstractList" "(" ( VarDecl(locals) )*
+	     ")"
+	     "AbstractList" "("	( stmt  = Stmt() { stmts.add(stmt); } )*
+	     ")"
+	")"
+	{ ml.add(new Absyn.VoidDecl(name.toString(), locals, stmts)); }
+}
+
+//Formal(Type type, String name)
+Absyn.Formal Formal() :
+{
+	Absyn.Type type;
+	Token name;
+}
+{
+	"Formal" "("
+	type = Type() name = <ID>
+	")"
+	{ return new Absyn.Formal(type, name.image); }
+}
+
+//VarDecl(Type type, String name, Expr init)
+void VarDecl(LinkedList<Absyn.VarDecl> vl) :
+{
+	Absyn.Type type;
+	Token name;
+	Absyn.Expr init = null;
+}
+{
+	"VarDecl" "("
+	type = Type() name = <ID> 
+	("null" |  init = Expr() )
+	")"
+	{ vl.add(new Absyn.VarDecl(type, name.image, init)); }
+}
+
+Absyn.Type Type() : 
+{
+ Absyn.Type t;
+}
+{
+   (LOOKAHEAD(ArrayType())      t = ArrayType()   |
+    LOOKAHEAD(BooleanType())    t = BooleanType() |
+    LOOKAHEAD(IntegerType())    t = IntegerType() |
+    LOOKAHEAD(IdentifierType()) t = IdentifierType() )
+{
+	return t;
+}
+}
+
+// ArrayType(Type base)
+Absyn.Type ArrayType() :
+{ Absyn.Type t; }
+{
+	"ArrayType" "(" t = Type()
+	")"
+	{ return new Absyn.ArrayType(t); }
+}
+
+// BooleanType() { }
+Absyn.Type BooleanType() :
+{}
+{
+	"BooleanType"
+	{ return new Absyn.BooleanType(); }
+}
+
+// IntegerType() { }
+Absyn.Type IntegerType() :
+{}
+{
+	"IntegerType"
+	{ return new Absyn.IntegerType(); }
+}
+
+// IdentifierType(String id)
+Absyn.Type IdentifierType() :
+{ Token t; }
+{
+	"IdentifierType" "(" t = <ID>
+	")"
+	{ return new Absyn.IdentifierType(t.image); }
+}
+
+Absyn.Stmt Stmt() : 
+{
+	Absyn.Stmt s;
+}
+{
+   (
+    s = AssignStmt() |
+    s = BlockStmt() |
+    s = IfStmt() |
+    s = XinuCallStmt() |
+    s = WhileStmt() 
+   )
+   { return s; }
+}
+
+//AssignStmt(AssignableExpr lhs, Expr rhs)
+Absyn.Stmt AssignStmt() :
+{
+	Absyn.Expr lhs = null, rhs = null;
+}
+{
+	"AssignStmt" "("
+	lhs = Expr()
+	rhs = Expr()
+	")"
+	{ return new Absyn.AssignStmt((Absyn.AssignableExpr) lhs, rhs); }
+}
+
+//BlockStmt(LinkedList<Stmt> stmts)
+Absyn.Stmt BlockStmt() :
+{
+	Absyn.Stmt stmt = null;
+	LinkedList<Absyn.Stmt> stmts      = new LinkedList<Absyn.Stmt>();
+}
+{
+	"BlockStmt" "("
+			"AbstractList" "("
+			( stmt = Stmt() { stmts.add(stmt); } )*
+			")"
+	")"
+	{ return new Absyn.BlockStmt(stmts); }
+}
+
+//IfStmt(Expr test, Stmt thenStm, Stmt elseStm)
+Absyn.Stmt IfStmt() :
+{
+	Absyn.Expr test;
+	Absyn.Stmt thenStm, elseStm = null;
+}
+{
+	"IfStmt" "("
+	test = Expr()
+	thenStm = Stmt()
+	( "null" {elseStm = null;}
+	| elseStm = Stmt() )
+	")"
+	{ return new Absyn.IfStmt(test, thenStm, elseStm); }
+}
+
+//XinuCallStmt(list of Expr)
+Absyn.Stmt XinuCallStmt() :
+{
+	Token name;
+	Absyn.Expr arg;
+	LinkedList<Absyn.Expr> args      = new LinkedList<Absyn.Expr>();
+}
+{
+	"XinuCallStmt" "(" name = <ID>
+	"AbstractList" "("
+		       ( arg = Expr() {args.add(arg); } )*
+		       ")"
+	")"
+		{ return new Absyn.XinuCallStmt(name.image, args); }
+}
+
+//WhileStmt(Expr test, Stmt body)
+Absyn.Stmt WhileStmt() :
+{
+	Absyn.Expr test;
+	Absyn.Stmt body;
+}
+{
+	"WhileStmt" "("
+	test = Expr()
+	body = Stmt()
+	")"
+
+	{ return new Absyn.WhileStmt(test, body); }
+}
+
+
+Absyn.Expr Expr() :
+{
+	Absyn.Expr e;
+}
+{
+	(
+	e = AddExpr()
+	| e = AndExpr()
+	| e = ArrayExpr()
+	| e = CallExpr()
+	| e = DivExpr()
+	| e = EqualExpr()
+	| e = FalseExpr()
+	| e = FieldExpr()
+	| e = GreaterExpr()
+	| e = IdentifierExpr()
+	| e = LesserExpr()
+	| e = MulExpr()
+	| e = NegExpr()
+	| e = NewArrayExpr()
+	| e = NewObjectExpr()
+	| e = NotEqExpr()
+	| e = NotExpr()
+	| e = NullExpr()
+	| e = OrExpr()
+	| e = SubExpr()
+	| e = ThisExpr()
+	| e = TrueExpr()
+	| e = XinuCallExpr()
+	| e = IntegerLiteral()
+	| e = StringLiteral()
+	)
+	{ return e; }
+}
+
+
+//AddExpr(Expr e1, Expr e2)
+Absyn.AddExpr AddExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"AddExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.AddExpr(e1, e2); }
+}
+
+//AndExpr(Expr e1, Expr e2)
+Absyn.AndExpr AndExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"AndExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.AndExpr(e1, e2); }
+}
+
+//DivExpr(Expr e1, Expr e2)
+Absyn.DivExpr DivExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"DivExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.DivExpr(e1, e2); }
+}
+
+//EqualExpr(Expr e1, Expr e2)
+Absyn.EqualExpr EqualExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"EqualExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.EqualExpr(e1, e2); }
+}
+
+//GreaterExpr(Expr e1, Expr e2)
+Absyn.GreaterExpr GreaterExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"GreaterExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.GreaterExpr(e1, e2); }
+}
+
+//LesserExpr(Expr e1, Expr e2)
+Absyn.LesserExpr LesserExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"LesserExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.LesserExpr(e1, e2); }
+}
+
+//MulExpr(Expr e1, Expr e2)
+Absyn.MulExpr MulExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"MulExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.MulExpr(e1, e2); }
+}
+
+//NotEqExpr(Expr e1, Expr e2)
+Absyn.NotEqExpr NotEqExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"NotEqExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.NotEqExpr(e1, e2); }
+}
+
+//OrExpr(Expr e1, Expr e2)
+Absyn.OrExpr OrExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"OrExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.OrExpr(e1, e2); }
+}
+
+//SubExpr(Expr e1, Expr e2)
+Absyn.SubExpr SubExpr() :
+{
+	Absyn.Expr e1, e2;
+}
+{
+	"SubExpr" "("
+	e1 = Expr() e2 = Expr()
+	")"
+	{ return new Absyn.SubExpr(e1, e2); }
+}
+
+//ArrayExpr(Expr target, Expr index)
+Absyn.ArrayExpr ArrayExpr() :
+{
+	Absyn.Expr target, index;
+}
+{
+	"ArrayExpr" "("
+	target = Expr() index = Expr()
+	")"
+	{ return new Absyn.ArrayExpr(target, index); }
+}
+
+//CallExpr(Expr target, String method, LinkedList<Expr> args)
+Absyn.CallExpr CallExpr() :
+{
+	Absyn.Expr target;
+	Token method;
+	Absyn.Expr arg;
+	LinkedList<Absyn.Expr> args = new LinkedList<Absyn.Expr>();
+}
+{
+	"CallExpr" "("
+	target = Expr() method = <ID>
+	"AbstractList" "("
+		       ( arg = Expr() {args.add(arg); } )*
+		       ")"
+	")"
+	{ return new Absyn.CallExpr(target, method.image, args); }
+}
+
+//FalseExpr()
+Absyn.FalseExpr FalseExpr() :
+{
+}
+{
+	"FalseExpr"
+	{ return new Absyn.FalseExpr(); }
+}
+
+//FieldExpr(Expr target, String field)
+Absyn.FieldExpr FieldExpr() :
+{
+	Absyn.Expr target;
+	Token field;
+}
+{
+	"FieldExpr" "("
+	target = Expr() field = <ID>
+	")"
+	{ return new Absyn.FieldExpr(target, field.image); }
+}
+
+//IdentifierExpr(String id)
+Absyn.IdentifierExpr IdentifierExpr() :
+{
+	Token id;
+}
+{
+	"IdentifierExpr" "("
+	id = <ID>
+	")"
+	{ return new Absyn.IdentifierExpr(id.image); }
+}
+
+
+//NegExpr(Expr e1)
+Absyn.NegExpr NegExpr() :
+{
+	Absyn.Expr e1;
+}
+{
+	"NegExpr" "("
+	e1 = Expr()
+	")"
+	{return new Absyn.NegExpr(e1); }
+}
+
+
+//NewArrayExpr(Type type, LinkedList<Expr> dimensions)
+Absyn.NewArrayExpr NewArrayExpr() :
+{
+	Absyn.Type type;
+	Absyn.Expr expr;
+	LinkedList<Absyn.Expr> dimensions = new LinkedList<Absyn.Expr>();
+}
+{
+	"NewArrayExpr" "("
+	type = Type()
+	"AbstractList" "("
+		       ( expr = Expr() { dimensions.add(expr); } 
+		       | "null" { dimensions.add(null); } )*
+		       ")"
+	")"
+	{ return new Absyn.NewArrayExpr(type, dimensions); }
+}
+
+//NewObjectExpr(Type type)
+Absyn.NewObjectExpr NewObjectExpr() :
+{
+	Absyn.Type type;
+}
+{
+	"NewObjectExpr" "("
+	type = Type()
+	")"
+	{ return new Absyn.NewObjectExpr(type); }
+}
+
+//NotExpr(Expr e1)
+Absyn.NotExpr NotExpr() :
+{
+	Absyn.Expr e1;
+}
+{
+	"NotExpr" "("
+	e1 = Expr()
+	")"
+	{ return new Absyn.NotExpr(e1); }
+}
+
+//NullExpr()
+Absyn.NullExpr NullExpr() :
+{
+}
+{
+	"NullExpr"
+	{ return new Absyn.NullExpr(); }
+}
+
+//XinuCallExpr(list of Expr)
+Absyn.XinuCallExpr XinuCallExpr() :
+{
+	Token name;
+	Absyn.Expr arg;
+	LinkedList<Absyn.Expr> args      = new LinkedList<Absyn.Expr>();
+}
+{
+	"XinuCallExpr" "(" name = <ID>
+	"AbstractList" "("
+		       ( arg = Expr() {args.add(arg); } )*
+		       ")"
+	")"
+		{ return new Absyn.XinuCallExpr(name.image, args); }
+}
+//ThisExpr()
+Absyn.ThisExpr ThisExpr() :
+{}
+{
+	"ThisExpr"
+	{ return new Absyn.ThisExpr(); }
+}
+
+//TrueExpr()
+Absyn.TrueExpr TrueExpr() :
+{}
+{
+	"TrueExpr"
+	{ return new Absyn.TrueExpr(); }
+}
+
+//IntegerLiteral(int value)
+Absyn.IntegerLiteral IntegerLiteral() :
+{ Token t; }
+{
+	"IntegerLiteral" "("
+	t=<INT>
+	")"
+	{ return new Absyn.IntegerLiteral(new Integer(t.toString())); }
+}
+
+
+//StringLiteral(String value)
+Absyn.StringLiteral StringLiteral() :
+{ Token t; }
+{
+	"StringLiteral" "("
+	t=<STRING>
+	")"
+	{ return new Absyn.StringLiteral(t.toString()); }
+}
+
