@@ -258,28 +258,24 @@ public class PrintVisitor implements Visitor
     public void visit(VoidDecl ast) {
             indent();
             out.print("VoidDecl(");
-    	    indentCount++;
-    	    out.print(ast.name);
-    	    visit((java.util.AbstractList) ast.locals);
-    	    visit((java.util.AbstractList) ast.body);
-    	    indentCount--;
-    	    out.print(")");
+            indentCount++;
+            out.print(ast.name);
+            visit((java.util.AbstractList) ast.locals);
+            visit((java.util.AbstractList) ast.stmts);   
+            indentCount--;
+            out.print(")");
     }
 
     public void visit(ThreadDecl ast) {
-       	    indent();
-    	    out.print("ThreadDecl(");
-    	    indentCount++;
-    	    out.print(ast.name + " Thread");
-    	    visit((java.util.AbstractList) ast.fields);
-    	    LinkedList<Absyn> decls = new LinkedList<Absyn>();
-    	    decls.addAll(ast.methods);
-    	    decls.addAll(ast.voidMethods);
-    	    visit(decls);
-    	    indentCount--;
-    	    out.print(")");
-    }
-
+    indent();
+    out.print("ThreadDecl(");
+    indentCount++;
+    out.print(ast.name + " Thread");
+    visit((java.util.AbstractList) ast.fields);
+    visit((java.util.AbstractList) ast.methods);
+    indentCount--;
+    out.print(")");
+}
     public void visit(ArrayExpr ast) {
             indent();
 	    out.print("ArrayExpr(");
@@ -336,6 +332,8 @@ public class PrintVisitor implements Visitor
 
     public void visit(NewObjectExpr ast) {
            indent();
-           out.print("NewObjectExpr(IdentifierType(" + ast.className + "))");
+           out.print("NewObjectExpr(");
+           ast.type.accept(this);
+    	   out.print(")");
     }
 }
