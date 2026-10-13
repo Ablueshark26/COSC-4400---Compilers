@@ -192,7 +192,7 @@ public class TypeChecker implements Visitor {
 			for (FIELD mf : c.methods) {
 				FUNCTION fn = (FUNCTION) mf.type;
 				FUNCTION inherited = findFunc(c.parent, fn.name);
-				if (inherited != null && !inherited.coerceTo(fn))
+				if (inherited != null && !fn.coerceTo(inherited))
 					error("incompatible method override: " + fn.name + " in class " + c.name);
 			}
 		}

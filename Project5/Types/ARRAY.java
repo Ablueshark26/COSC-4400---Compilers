@@ -1,4 +1,4 @@
-/* Copyright (C) 2007, Marquette University.  All rights reserved. */
+* Copyright (C) 2007, Marquette University.  All rights reserved. */
 package Types;
 
 /**

@@ -1,0 +1,30 @@
+Program(AbstractList(
+ ClassDecl(Test null AbstractList() AbstractList(MethodDecl(public_static_void main AbstractList(Formal(ArrayType(IdentifierType(String)) a)) AbstractList() AbstractList() IntegerLiteral(0))))
+ ClassDecl(A null
+  AbstractList(VarDecl(IntegerType x null) VarDecl(BooleanType x null))
+  AbstractList(
+   MethodDecl(IntegerType f AbstractList(Formal(IntegerType n)) AbstractList(VarDecl(IntegerType n null))
+    AbstractList(
+     AssignStmt(IdentifierExpr(x) TrueExpr)
+     AssignStmt(IdentifierExpr(nope) IntegerLiteral(1))
+     IfStmt(IntegerLiteral(1) AssignStmt(IdentifierExpr(x) IntegerLiteral(2)) null)
+     WhileStmt(IdentifierExpr(x) AssignStmt(IdentifierExpr(x) IntegerLiteral(2)))
+     AssignStmt(IdentifierExpr(x) AddExpr(TrueExpr IntegerLiteral(1)))
+     AssignStmt(IdentifierExpr(x) NegExpr(TrueExpr))
+     AssignStmt(IdentifierExpr(x) CallExpr(ThisExpr g AbstractList()))
+     AssignStmt(IdentifierExpr(x) CallExpr(ThisExpr f AbstractList()))
+     AssignStmt(IdentifierExpr(x) CallExpr(ThisExpr f AbstractList(TrueExpr)))
+     AssignStmt(IdentifierExpr(x) CallExpr(IdentifierExpr(x) f AbstractList(IntegerLiteral(1))))
+     AssignStmt(IdentifierExpr(x) FieldExpr(ThisExpr zzz))
+     AssignStmt(IdentifierExpr(x) ArrayExpr(IdentifierExpr(x) IntegerLiteral(0)))
+     AssignStmt(IdentifierExpr(x) NewObjectExpr(IdentifierType(Missing))))
+    TrueExpr)
+   MethodDecl(IntegerType f AbstractList() AbstractList() AbstractList() IntegerLiteral(0))))
+ ClassDecl(A null AbstractList() AbstractList())
+ ClassDecl(B Nobody AbstractList(VarDecl(IdentifierType(Ghost) g null)) AbstractList())
+ ClassDecl(C D AbstractList() AbstractList())
+ ClassDecl(D C AbstractList() AbstractList())
+ ClassDecl(E A AbstractList() AbstractList(MethodDecl(BooleanType f AbstractList(Formal(IntegerType n)) AbstractList() AbstractList() TrueExpr)))
+)
+)
+

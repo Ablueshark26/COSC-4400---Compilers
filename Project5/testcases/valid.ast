@@ -1,0 +1,35 @@
+Program(AbstractList(
+ ClassDecl(Test null AbstractList() AbstractList(MethodDecl(public_static_void main AbstractList(Formal(ArrayType(IdentifierType(String)) a)) AbstractList() AbstractList() IntegerLiteral(0))))
+ ClassDecl(Node null
+  AbstractList(VarDecl(IntegerType val null) VarDecl(IdentifierType(Node) next null) VarDecl(ArrayType(IntegerType) arr null))
+  AbstractList(
+   MethodDecl(IntegerType sum AbstractList(Formal(IntegerType n))
+    AbstractList(VarDecl(IntegerType i null) VarDecl(IntegerType total null))
+    AbstractList(
+     AssignStmt(IdentifierExpr(i) IntegerLiteral(0))
+     AssignStmt(IdentifierExpr(total) IntegerLiteral(0))
+     WhileStmt(LesserExpr(IdentifierExpr(i) IdentifierExpr(n))
+      BlockStmt(AbstractList(
+       AssignStmt(IdentifierExpr(total) AddExpr(IdentifierExpr(total) ArrayExpr(FieldExpr(ThisExpr arr) IdentifierExpr(i))))
+       AssignStmt(IdentifierExpr(i) AddExpr(IdentifierExpr(i) IntegerLiteral(1)))))))
+    IdentifierExpr(total))
+   MethodDecl(IdentifierType(Node) link AbstractList(Formal(IdentifierType(Node) o)) AbstractList()
+    AbstractList(AssignStmt(FieldExpr(ThisExpr next) IdentifierExpr(o))) ThisExpr)
+   MethodDecl(BooleanType isLast AbstractList() AbstractList() AbstractList()
+    EqualExpr(FieldExpr(ThisExpr next) NullExpr))))
+ ClassDecl(Sub Node
+  AbstractList(VarDecl(IntegerType extra null))
+  AbstractList(
+   MethodDecl(IntegerType sum AbstractList(Formal(IntegerType n)) AbstractList() AbstractList()
+    MulExpr(IdentifierExpr(n) IntegerLiteral(2)))
+   MethodDecl(IntegerType use AbstractList(Formal(IdentifierType(Node) p)) AbstractList(VarDecl(IdentifierType(Node) q null))
+    AbstractList(
+     AssignStmt(IdentifierExpr(q) NewObjectExpr(IdentifierType(Sub)))
+     IfStmt(NotExpr(CallExpr(IdentifierExpr(p) isLast AbstractList())) AssignStmt(IdentifierExpr(extra) IntegerLiteral(1)) null)
+     AssignStmt(IdentifierExpr(p) IdentifierExpr(q)))
+    CallExpr(IdentifierExpr(p) sum AbstractList(IntegerLiteral(3))))))
+ ThreadDecl(Worker Thread
+  AbstractList(VarDecl(IntegerType count null))
+  AbstractList(VoidDecl(run AbstractList() AbstractList(AssignStmt(IdentifierExpr(count) IntegerLiteral(1)))))))
+)
+
