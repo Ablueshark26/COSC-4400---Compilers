@@ -6,7 +6,7 @@ public class CallExpr extends Expr {
     public Expr object;
     public String method;
     public List<Expr> args;
-
+    public int typeIndex = -1;
     public CallExpr(Expr object, String method, List<Expr> args) {
         super();
         this.object = object;

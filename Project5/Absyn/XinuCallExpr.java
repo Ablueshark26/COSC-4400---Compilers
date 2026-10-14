@@ -5,7 +5,7 @@ import java.util.List;
 public class XinuCallExpr extends Expr {
     public String function;
     public List<Expr> args;
-
+    public int typeIndex = -1;
     public XinuCallExpr(String function, List<Expr> args) {
         super();
         this.function = function;

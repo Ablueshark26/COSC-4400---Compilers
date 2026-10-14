@@ -9,6 +9,7 @@ public class Formal extends Absyn
 {
     public Type type;
     public String name;
+    public Types.Type checkType;
     public Formal(Type type, String name)
     {
 		this.type = type;
