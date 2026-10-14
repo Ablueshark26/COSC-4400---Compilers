@@ -1,4 +1,4 @@
-/* Copyright (C) 2007, Marquette University.  All rights reserved. */
+/* Copyright (C) 2008, Marquette University.  All rights reserved. */
 package Absyn;
 import java.io.PrintWriter;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import java.util.LinkedList;
 
 public class PrintVisitor implements Visitor
 {
-    PrintWriter out;
+    protected PrintWriter out;
     public int indentCount = 0;
 
     public PrintVisitor(PrintWriter out)
@@ -22,7 +22,7 @@ public class PrintVisitor implements Visitor
 		this.out = new PrintWriter(System.out);
     }
 
-    private void indent()
+    protected void indent()
     {
 		out.print('\n');
 		for(int i = 0; i < indentCount; i++)

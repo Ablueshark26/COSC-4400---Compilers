@@ -39,6 +39,8 @@ public class TypeChecker implements Visitor {
 	private Table<Types.Type> vars = new Table<Types.Type>();  // locals/formals, scoped
 	private final Map<MethodDecl, FUNCTION> fnOf = new IdentityHashMap<MethodDecl, FUNCTION>();
 	private final Map<Absyn, CLASS> descOf = new IdentityHashMap<Absyn, CLASS>();
+	public Map<Absyn, CLASS> getClassOf() { return descOf; }
+	public Map<MethodDecl, FUNCTION> getFnOf() { return fnOf; }
 
 	private CLASS cur;              // class whose members are being checked
 	private Types.Type result;      // result of the last expression/type visited
@@ -89,14 +91,20 @@ public class TypeChecker implements Visitor {
 		return null;
 	}
 
-	private static FUNCTION findFunc(CLASS c, String name) //this scans the parent to find the function. similar to first
+	private static FIELD findMethodField(CLASS c, String name) //same as findFunc but keeps the FIELD (for its index)
 	{
 		for (CLASS curr = c; curr != null; curr = curr.parent) //start at given class move up
 		{
-			FIELD f = curr.methods.get(name); // FIX: was curr.fields.get(name) -- methods live in .methods!
-			if (f != null) return (FUNCTION) f.type;
+			FIELD f = curr.methods.get(name);
+			if (f != null) return f;
 		}
 		return null;
+	}
+
+	private static FUNCTION findFunc(CLASS c, String name) //this scans the parent to find the function. similar to first
+	{
+		FIELD f = findMethodField(c, name);
+		return (f == null) ? null : (FUNCTION) f.type;
 	}
 
 	//Build
@@ -107,10 +115,6 @@ public class TypeChecker implements Visitor {
 		//The built-in superclass of every thread.
 		CLASS thread = new CLASS("Thread");
 		classes.put("Thread", thread);
-			
-		//strings need to be kept to Object(String)
-		CLASS stringClass = new CLASS("String");
-		classes.put("String", stringClass);
 
 		//enter every class name
 		for (ClassDecl d : decls) {
@@ -121,6 +125,7 @@ public class TypeChecker implements Visitor {
 			CLASS c = new CLASS(d.name);
 			classes.put(d.name, c);
 			descOf.put(d, c);
+			d.checkType = c;
 		}
 
 		//resolve superclasses
@@ -156,14 +161,20 @@ public class TypeChecker implements Visitor {
 			if (c == null) continue;
 			for (VarDecl f : d.fields) {
 				Types.Type t = resolve(f.type);
+				f.checkType = t;
 				if (c.fields.get(f.name) != null) error(f.name + " is already defined in " + c.name);
 				else c.fields.put(t, f.name);
 			}
 			for (MethodDecl m : d.methods) {
 				Types.Type ret = (m.returnType == null) ? new VOID() : resolve(m.returnType);
 				FUNCTION fn = new FUNCTION(m.name, new OBJECT(c), new RECORD(), ret); // FIX: fresh OBJECT, not c.instance
-				for (Formal f : m.params) fn.addFormal(resolve(f.type), f.name);
+				for (Formal f : m.params) {
+					Types.Type pt = resolve(f.type);
+					f.checkType = pt;
+					fn.addFormal(pt, f.name);
+				}
 				fnOf.put(m, fn);
+				m.checkType = fn;
 				if (c.methods.get(m.name) != null) error(m.name + " is already defined in " + c.name);
 				else c.methods.put(fn, m.name);
 			}
@@ -192,7 +203,7 @@ public class TypeChecker implements Visitor {
 			for (FIELD mf : c.methods) {
 				FUNCTION fn = (FUNCTION) mf.type;
 				FUNCTION inherited = findFunc(c.parent, fn.name);
-				if (inherited != null && !fn.coerceTo(inherited))
+				if (inherited != null && !inherited.coerceTo(fn))
 					error("incompatible method override: " + fn.name + " in class " + c.name);
 			}
 		}
@@ -240,6 +251,7 @@ public class TypeChecker implements Visitor {
 	private void declareLocals(List<VarDecl> locals, String owner) {
 		for (VarDecl v : locals) {
 			Types.Type vt = resolve(v.type);
+			v.checkType = vt;
 			declare(v.name, vt, owner);
 			if (v.init != null) expect(vt, check(v.init));
 		}
@@ -275,6 +287,7 @@ public class TypeChecker implements Visitor {
 	public void visit(ArrayType n) { result = new ARRAY(resolve(n.base)); }
 
 	public void visit(IdentifierType n) {
+		if (n.id.equals("String")) { result = new STRING(); return; }
 		CLASS c = classes.get(n.id);
 		if (c == null) {
 			error("cannot resolve class " + n.id);
@@ -395,6 +408,7 @@ public class TypeChecker implements Visitor {
 			error("cannot resolve symbol " + n.field);
 			result = errType();
 		} else {
+			n.typeIndex = f.index;
 			result = f.type;
 		}
 	}
@@ -419,8 +433,13 @@ public class TypeChecker implements Visitor {
 		Types.Type ot = check(n.object);
 		FUNCTION fn = null;
 		if (ot instanceof OBJECT) {
-			fn = findFunc(((OBJECT) ot).myClass, n.method);
-			if (fn == null) error("cannot resolve method " + n.method);
+			FIELD mf = findMethodField(((OBJECT) ot).myClass, n.method);
+			if (mf == null) {
+				error("cannot resolve method " + n.method);
+			} else {
+				fn = (FUNCTION) mf.type;
+				n.typeIndex = mf.index;
+			}
 		} else if (!isErr(ot)) {
 			error("target not object, type " + ot);
 		}

@@ -7,8 +7,14 @@ public class PrintVisitor implements Visitor
 {
     private PrintWriter out;
     private int indentCount = 0;
- 
-    public PrintVisitor(PrintWriter out) { this.out = out; }
+    public PrintVisitor(PrintWriter out) {
+    this.out = out;
+    }
+
+    public PrintVisitor(PrintWriter out, int indentCount) { 
+	   this.out = out;
+	   this.indentCount = indentCount; 
+    }
  
     private void indent()
     {

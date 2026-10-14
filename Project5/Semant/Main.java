@@ -10,8 +10,6 @@ import java.io.Reader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import Parse.MiniJavaParser;
-import Absyn.Program;
  
 public class Main
 {
@@ -26,7 +24,9 @@ public class Main
             TypeChecker tc = new TypeChecker();
             tc.visit(prog);
             PrintWriter pw = new PrintWriter(System.out);
-            tc.printClasses(pw);
+            SubPrintVisitor apv = new SubPrintVisitor(pw);
+            prog.accept(apv);
+            pw.flush();
         }
         catch (ParseException p)
         {
