@@ -32,7 +32,7 @@ RA_JAVACCGEN = $(SEMANTDIR)/SimpleCharStream.java \
 ASTSRC    = $(wildcard Absyn/*.java)
 TYPESRC   = $(wildcard Types/*.java)
 SYMSRC    = $(wildcard Symbol/*.java)
-SEMANTSRC = Semant/Main.java Semant/TypeChecker.java
+SEMANTSRC = Semant/Main.java Semant/TypeChecker.java Semant/SubPrintVisitor.java
 
 PARSESRC = Parse/Main.java $(ASTSRC)
 ALLSRC   = $(PARSESRC) $(TYPESRC) $(SYMSRC) $(SEMANTSRC)

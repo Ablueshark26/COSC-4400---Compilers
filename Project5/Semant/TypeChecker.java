@@ -115,7 +115,9 @@ public class TypeChecker implements Visitor {
 		//The built-in superclass of every thread.
 		CLASS thread = new CLASS("Thread");
 		classes.put("Thread", thread);
-
+		
+		CLASS stringClass = new CLASS("String");
+		classes.put("String", stringClass);
 		//enter every class name
 		for (ClassDecl d : decls) {
 			if (classes.get(d.name) != null) {
@@ -203,7 +205,7 @@ public class TypeChecker implements Visitor {
 			for (FIELD mf : c.methods) {
 				FUNCTION fn = (FUNCTION) mf.type;
 				FUNCTION inherited = findFunc(c.parent, fn.name);
-				if (inherited != null && !inherited.coerceTo(fn))
+				if (inherited != null && !fn.coerceTo(inherited))
 					error("incompatible method override: " + fn.name + " in class " + c.name);
 			}
 		}
@@ -287,7 +289,6 @@ public class TypeChecker implements Visitor {
 	public void visit(ArrayType n) { result = new ARRAY(resolve(n.base)); }
 
 	public void visit(IdentifierType n) {
-		if (n.id.equals("String")) { result = new STRING(); return; }
 		CLASS c = classes.get(n.id);
 		if (c == null) {
 			error("cannot resolve class " + n.id);
