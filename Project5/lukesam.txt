@@ -1,121 +1,47 @@
+ERROR incompatible types: boolean required, but OBJECT:String[] found
 Program(
  AbstractList(
-  ClassDecl(Test null
+  ClassDecl(T5Parse null
    AbstractList()
    AbstractList(
     MethodDecl(public_static_void main
      AbstractList(
-      Formal(ArrayType(IdentifierType(String)) a))
-     AbstractList()
-     AbstractList()
+      Formal(ArrayType(IdentifierType(String)) args))
+     AbstractList(
+      VarDecl(BooleanType b null
+       BOOLEAN))
+     AbstractList(
+      AssignStmt(
+       IdentifierExpr(b)
+       IdentifierExpr(args)))
      IntegerLiteral(0)
      FUNCTION(main
-      OBJECT(Test)
+      OBJECT(T5Parse)
       RECORD(
-       FIELD(0 a
+       FIELD(0 args
         ARRAY(
          OBJECT(String))))
       VOID)))
-   CLASS(Test
+   CLASS(T5Parse
     null
     RECORD(
      FIELD(0 main
       FUNCTION(main
-       OBJECT(Test)
+       OBJECT(T5Parse)
        RECORD(
-        FIELD(0 a
+        FIELD(0 args
          ARRAY(
           OBJECT(String))))
        VOID)))
     RECORD()
-    OBJECT(Test
+    OBJECT(T5Parse
      RECORD(
       FIELD(0 main
        FUNCTION(main
-        OBJECT(Test)
+        OBJECT(T5Parse)
         RECORD(
-         FIELD(0 a
+         FIELD(0 args
           ARRAY(
            OBJECT(String))))
         VOID)))
-     RECORD())))
-  ClassDecl(A null
-   AbstractList(
-    VarDecl(IntegerType x null
-     INT))
-   AbstractList(
-    MethodDecl(IntegerType giveY
-     AbstractList(
-      Formal(IntegerType y))
-     AbstractList()
-     AbstractList()
-     IdentifierExpr(y)
-     FUNCTION(giveY
-      OBJECT(A)
-      RECORD(
-       FIELD(0 y
-        INT))
-      INT)))
-   CLASS(A
-    null
-    RECORD(
-     FIELD(0 giveY
-      FUNCTION(giveY
-       OBJECT(A)
-       RECORD(
-        FIELD(0 y
-         INT))
-       INT)))
-    RECORD(
-     FIELD(0 x
-      INT))
-    OBJECT(A
-     RECORD(
-      FIELD(0 giveY
-       FUNCTION(giveY
-        OBJECT(A)
-        RECORD(
-         FIELD(0 y
-          INT))
-        INT)))
-     RECORD(
-      FIELD(0 x
-       INT)))))
-  ClassDecl(B A
-   AbstractList()
-   AbstractList(
-    MethodDecl(IntegerType giveY
-     AbstractList(
-      Formal(IntegerType y))
-     AbstractList()
-     AbstractList()
-     IdentifierExpr(y)
-     FUNCTION(giveY
-      OBJECT(B)
-      RECORD(
-       FIELD(0 y
-        INT))
-      INT)))
-   CLASS(B
-    A
-    RECORD(
-     FIELD(0 giveY
-      FUNCTION(giveY
-       OBJECT(B)
-       RECORD(
-        FIELD(0 y
-         INT))
-       INT)))
-    RECORD()
-    OBJECT(B
-     RECORD(
-      FIELD(0 giveY
-       FUNCTION(giveY
-        OBJECT(B)
-        RECORD(
-         FIELD(0 y
-          INT))
-        INT)))
-     RECORD(
-      FIELD(0 x
-       INT)))))))
+     RECORD())))))
