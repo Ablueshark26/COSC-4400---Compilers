@@ -1,0 +1,47 @@
+ERROR incompatible types: boolean required, but OBJECT:String[] found
+Program(
+ AbstractList(
+  ClassDecl(T5Parse null
+   AbstractList()
+   AbstractList(
+    MethodDecl(public_static_void main
+     AbstractList(
+      Formal(ArrayType(IdentifierType(String)) args))
+     AbstractList(
+      VarDecl(BooleanType b null
+       BOOLEAN))
+     AbstractList(
+      AssignStmt(
+       IdentifierExpr(b)
+       IdentifierExpr(args)))
+     IntegerLiteral(0)
+     FUNCTION(main
+      OBJECT(T5Parse)
+      RECORD(
+       FIELD(0 args
+        ARRAY(
+         OBJECT(String))))
+      VOID)))
+   CLASS(T5Parse
+    null
+    RECORD(
+     FIELD(0 main
+      FUNCTION(main
+       OBJECT(T5Parse)
+       RECORD(
+        FIELD(0 args
+         ARRAY(
+          OBJECT(String))))
+       VOID)))
+    RECORD()
+    OBJECT(T5Parse
+     RECORD(
+      FIELD(0 main
+       FUNCTION(main
+        OBJECT(T5Parse)
+        RECORD(
+         FIELD(0 args
+          ARRAY(
+           OBJECT(String))))
+        VOID)))
+     RECORD())))))
