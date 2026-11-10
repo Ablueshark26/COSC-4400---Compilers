@@ -1,6 +1,5 @@
 /**
  * COSC 4400 - Project #7
- * IfThenElseExp: if-then-else that may be used as an expression, a statement or a condition.
  * @authors Luke Sam
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu
@@ -27,7 +26,6 @@ public class IfThenElseExp extends Exp {
     private static Tree.Stm LABEL(Label l) { return new Tree.LABEL(l); }
     private static Tree.Stm JUMP(Label l)  { return new Tree.JUMP(l); }
 
-    /** Used as a condition: each branch jumps straight to the final targets. */
     Tree.Stm unCx(Label tt, Label ff) {
 	Label t = new Label();
 	Label f = new Label();
@@ -36,7 +34,6 @@ public class IfThenElseExp extends Exp {
 		       SEQ(LABEL(f), falseExp.unCx(tt, ff))));
     }
 
-    /** Used as a value: both arms leave their result in a fresh temp. */
     Tree.Exp unEx() {
 	Tree.Exp tExp = trueExp.unEx();
 	Tree.Exp fExp = falseExp.unEx();
@@ -54,7 +51,6 @@ public class IfThenElseExp extends Exp {
 	    new Tree.TEMP(r));
     }
 
-    /** Used as a statement: run the chosen arm, then fall into the join label. */
     Tree.Stm unNx() {
 	Tree.Stm tStm = trueExp.unNx();
 	Tree.Stm fStm = falseExp.unNx();

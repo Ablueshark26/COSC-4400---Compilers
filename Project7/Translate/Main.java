@@ -1,9 +1,5 @@
 /**
  * COSC 4400 - Project #7
- * Translate.Main: driver for the translator. Reads the type checker's output
- * (Program(...) with type annotations) from a file argument or standard input,
- * translates it to IR trees, and prints every fragment (ProcFrag/DataFrag).
- * If the input is raw MiniJava source instead, it is parsed first.
  * @authors Luke Sam
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu

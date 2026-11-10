@@ -1,6 +1,5 @@
 package Symbol;
 
-/** Interned names, as in Appel's Symbol class. */
 public class Symbol {
     private final String name;
     private Symbol(String n) { name = n; }

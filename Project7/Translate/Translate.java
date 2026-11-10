@@ -1,20 +1,6 @@
 /**
  * COSC 4400 - Project #7
- * Translate: visitor that converts the type-checked MiniJava abstract syntax
- * tree into Appel-style intermediate representation trees (Tree package).
- * Produces a list of fragments: one ProcFrag per method, and DataFrags for
- * string literals and per-class virtual tables.
- *
- * Runtime model:
- *   object : word 0 = vtable pointer, field i at byte offset (i+1)*wordSize
- *            (inherited fields first)
- *   array  : length at index -1,      element i at byte offset i*wordSize
- *   method : label Class__method, receiver ("this") is formal 0;
- *            static main is labelled "main" and has no receiver
- *   vtable : one word per method slot; overriding methods reuse the slot
- *   calls  : virtual dispatch through MEM(MEM(obj) + slot*wordSize)
- *   runtime: _new(bytes) (wraps malloc); Xinu.f(...) -> external call to f
- *
+ * Translate
  * @authors Luke Sam
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu
@@ -35,21 +21,15 @@ import Temp.Temp;
 
 public class Translate implements Absyn.TreeVisitor
 {
-    /** Emit null-pointer checks (jump to frame.badPtr()) on object field access and calls. */
     public static boolean NULL_CHECKS = true;
-    /** Emit array bounds checks (jump to frame.badSub()). */
     public static boolean BOUNDS_CHECKS = false;
 
-    /** Prototype frame: used only as a factory for per-method frames. */
     public Frame.Frame frame;
 
     public Translate(Frame.Frame frame) { this.frame = frame; }
 
     private int ws() { return frame.wordSize(); }
-
-    // ---------------------------------------------------------------
-    // Tree-construction helpers
-    // ---------------------------------------------------------------
+     
     private static Tree.Exp CONST(int value)  { return new Tree.CONST(value); }
     private static Tree.Exp NAME(Label label) { return new Tree.NAME(label); }
     private static Tree.Exp TEMP(Temp temp)   { return new Tree.TEMP(temp); }
@@ -78,7 +58,6 @@ public class Translate implements Absyn.TreeVisitor
     }
     private static Tree.Stm LABEL(Label label) { return new Tree.LABEL(label); }
 
-    /** Right-nested SEQ of a list of statements (null if empty). */
     private static Tree.Stm seqOf(List<Tree.Stm> stms)
     {
 	Tree.Stm result = null;
@@ -93,22 +72,17 @@ public class Translate implements Absyn.TreeVisitor
 	return BINOP(Tree.BINOP.PLUS, base, CONST(bytes));
     }
 
-    // ---------------------------------------------------------------
-    // Fragments and class/method environments
-    // ---------------------------------------------------------------
-    private LinkedList<Frag> frags = new LinkedList<Frag>();
+   private LinkedList<Frag> frags = new LinkedList<Frag>();
     public List<Frag> results() { return frags; }
 
-    /** Per-method information, one entry per vtable slot. */
     private static class MethodInfo
     {
 	String name;
 	Label label;
-	Absyn.Type returnType;   // null for void methods
-	String owner;            // class that supplies this implementation
+	Absyn.Type returnType;  
+	String owner;         
     }
 
-    /** Per-class layout information. */
     private static class ClassInfo
     {
 	String name;
@@ -140,11 +114,11 @@ public class Translate implements Absyn.TreeVisitor
 	ClassInfo ci = classEnv.get(name);
 	if (ci != null) return ci;
 	Absyn.ClassDecl d = declOf.get(name);
-	if (d == null) return null;            // built-in (Thread, String)
+	if (d == null) return null;            
 	ci = new ClassInfo();
 	ci.name = name;
 	ci.decl = d;
-	classEnv.put(name, ci);                // before recursion: tolerate cycles
+	classEnv.put(name, ci);                
 	ci.parent = classInfo(d.parent);
 	ci.vtable = new Label(name + "__vtable");
 	if (ci.parent != null)
@@ -161,7 +135,7 @@ public class Translate implements Absyn.TreeVisitor
 	}
 	for (Absyn.MethodDecl m : d.methods)
 	{
-	    if (isMain(m)) continue;           // static: not in the vtable
+	    if (isMain(m)) continue;           
 	    MethodInfo mi = new MethodInfo();
 	    mi.name = m.name;
 	    mi.label = new Label(name + "__" + m.name);
@@ -174,19 +148,16 @@ public class Translate implements Absyn.TreeVisitor
 		ci.slots.add(mi);
 	    }
 	    else
-		ci.slots.set(slot, mi);        // override reuses the slot
+		ci.slots.set(slot, mi);        
 	}
 	return ci;
     }
 
-    // ---------------------------------------------------------------
-    // Per-method state
-    // ---------------------------------------------------------------
     private Table<Frame.Access> varEnv  = new Table<Frame.Access>();
     private Table<Absyn.Type>   typeEnv = new Table<Absyn.Type>();
     private Frame.Frame curFrame;
     private ClassInfo   curClass;
-    private Frame.Access thisAccess;       // null in static main
+    private Frame.Access thisAccess;     
 
     private Tree.Exp thisExp() { return thisAccess.exp(curFrame); }
 
@@ -196,9 +167,6 @@ public class Translate implements Absyn.TreeVisitor
 	return offset(obj, (idx + 1) * ws());
     }
 
-    // ---------------------------------------------------------------
-    // Static types (only what translation needs: class of an expression)
-    // ---------------------------------------------------------------
     private Absyn.Type typeOf(Absyn.Expr e)
     {
 	if (e instanceof Absyn.IdentifierExpr)
@@ -249,11 +217,6 @@ public class Translate implements Absyn.TreeVisitor
 	return (t instanceof Absyn.IdentifierType) ? ((Absyn.IdentifierType) t).id : null;
     }
 
-    // ---------------------------------------------------------------
-    // Safety-check helpers
-    // ---------------------------------------------------------------
-
-    /** Make sure e can be used more than once: returns a TEMP (or CONST). */
     private Tree.Exp stable(Tree.Exp e, List<Tree.Stm> pre)
     {
 	if (e instanceof Tree.TEMP || e instanceof Tree.CONST) return e;
@@ -262,7 +225,6 @@ public class Translate implements Absyn.TreeVisitor
 	return TEMP(t);
     }
 
-    /** CJUMP(EQ, ptr, 0, badPtr, ok) followed by LABEL(ok), as in the lecture slides. */
     private Tree.Stm nullCheck(Tree.Exp ptr)
     {
 	Label ok = new Label();
@@ -280,11 +242,8 @@ public class Translate implements Absyn.TreeVisitor
     }
 
     private boolean isThis(Absyn.Expr e) { return e instanceof Absyn.ThisExpr; }
-
-    // ---------------------------------------------------------------
-    // Declarations
-    // ---------------------------------------------------------------
-    public Exp visit(Absyn.Program n)
+	
+	public Exp visit(Absyn.Program n)
     {
 	for (Absyn.ClassDecl c : n.classes) declOf.put(c.name, c);
 	for (Absyn.ClassDecl c : n.classes) classInfo(c.name);
@@ -295,7 +254,6 @@ public class Translate implements Absyn.TreeVisitor
     public Exp visit(Absyn.ClassDecl c)
     {
 	curClass = classInfo(c.name);
-	// vtable first, then the code of each method
 	List<Label> labels = new ArrayList<Label>();
 	for (MethodInfo mi : curClass.slots) labels.add(mi.label);
 	boolean hasMain = false;
@@ -336,7 +294,6 @@ public class Translate implements Absyn.TreeVisitor
 	for (Absyn.Stmt s : m.stmts)
 	    body.add(s.accept(this).unNx());
 
-	// void methods and main end with MOVE(RV, 0)
 	body.add(MOVE(TEMP(curFrame.RV()), m.returnVal.accept(this).unEx()));
 
 	Tree.Stm result = seqOf(body);
@@ -377,9 +334,6 @@ public class Translate implements Absyn.TreeVisitor
     public Exp visit(Absyn.ArrayType t)      { return new Nx(null); }
     public Exp visit(Absyn.IdentifierType t) { return new Nx(null); }
 
-    // ---------------------------------------------------------------
-    // Statements
-    // ---------------------------------------------------------------
     public Exp visit(Absyn.AssignStmt s)
     {
 	Tree.Exp dst = s.lhs.accept(this).unEx();
@@ -425,9 +379,6 @@ public class Translate implements Absyn.TreeVisitor
 				      SEQ(JUMP(test), LABEL(done)))))));
     }
 
-    // ---------------------------------------------------------------
-    // Operators
-    // ---------------------------------------------------------------
     private Exp Ex(int op, Absyn.BinOpExpr e)
     {
 	Exp e1 = e.e1.accept(this);
@@ -479,10 +430,7 @@ public class Translate implements Absyn.TreeVisitor
 	return new IfThenElseExp(exp, new Ex(CONST(0)), new Ex(CONST(1)));
     }
 
-    // ---------------------------------------------------------------
-    // Allocation
-    // ---------------------------------------------------------------
-    public Exp visit(Absyn.NewObjectExpr e)
+     public Exp visit(Absyn.NewObjectExpr e)
     {
 	ClassInfo ci = classInfo(className(e.type));
 	int nfields = (ci == null) ? 0 : ci.fieldIndex.size();
@@ -495,10 +443,7 @@ public class Translate implements Absyn.TreeVisitor
 	return new Ex(ESEQ(init, TEMP(r)));
     }
 
-    /**
-     * Array of n elements: _new((n+1) words), length stored in the first word,
-     * result points at element 0 so the length lives at index -1.
-     */
+    
     private Tree.Exp initArray(Tree.Exp size)
     {
 	Temp r = new Temp();
@@ -538,7 +483,6 @@ public class Translate implements Absyn.TreeVisitor
 
     public Exp visit(Absyn.NewArrayExpr e)
     {
-	// Evaluate every size exactly once, left to right.
 	List<Tree.Stm> pre = new ArrayList<Tree.Stm>();
 	List<Tree.Exp> dims = new ArrayList<Tree.Exp>();
 	for (Absyn.Expr s : e.sizes)
@@ -550,9 +494,6 @@ public class Translate implements Absyn.TreeVisitor
 	return new Ex(ESEQ(seqOf(pre), arr));
     }
 
-    // ---------------------------------------------------------------
-    // Calls
-    // ---------------------------------------------------------------
     private List<Tree.Exp> args(Tree.Exp first, List<Absyn.Expr> actuals)
     {
 	List<Tree.Exp> args = new LinkedList<Tree.Exp>();
@@ -596,9 +537,6 @@ public class Translate implements Absyn.TreeVisitor
 	return new Ex(ESEQ(seqOf(pre), call));
     }
 
-    // ---------------------------------------------------------------
-    // Leaves
-    // ---------------------------------------------------------------
     public Exp visit(Absyn.FalseExpr e)      { return new Ex(CONST(0)); }
     public Exp visit(Absyn.TrueExpr e)       { return new Ex(CONST(1)); }
     public Exp visit(Absyn.IntegerLiteral e) { return new Ex(CONST(e.value)); }
