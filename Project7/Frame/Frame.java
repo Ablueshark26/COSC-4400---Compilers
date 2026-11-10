@@ -1,3 +1,11 @@
+/**
+ * COSC 4400 - Project #7
+ * Frame: abstract stack frame for the target architecture.
+ * @authors Luke Sam
+ * Instructor Dr. Brylow
+ * TA-BOT:MAILTO luke.sharba@marquette.edu
+ * TA-BOT:MAILTO samuel.biskupic@marquette.edu
+ */
 /* Copyright (C) 1997-2003, Purdue Research Foundation of Purdue University.
  * All rights reserved.  */
 package Frame;
@@ -14,7 +22,10 @@ public abstract class Frame
   /* To store the name of the function as a label*/
   public Temp.Label name;
   /* Formals - This will contain a list of Access*/	
-  public List<Access> formals;	
+  public List<Access> formals;
+  /* Where the caller puts each actual argument */
+  public List<Access> actuals;
+
 
   public abstract Frame newFrame(Symbol.Symbol name);
   public abstract Access allocFormal();
@@ -23,6 +34,8 @@ public abstract class Frame
   public abstract int wordSize();
   /* Function Symbol & Args list */
   public abstract Temp.Temp RV();
+  /* Call to a runtime/external routine (e.g. allocation, Xinu) */
+  public abstract Tree.Exp externalCall(Symbol.Symbol s, List<Tree.Exp> args);
 
 	
   public abstract String string(Temp.Label label, String value);
@@ -33,7 +46,9 @@ public abstract class Frame
   public abstract String tempMap(Temp.Temp temp);
   public abstract void printFrame(java.io.PrintWriter pw);
 
+  /* Commented out for Project 7 (needs Assem; used in a later phase)
   public abstract void procEntryExit1(List<Tree.Stm> body);
   public abstract void procEntryExit2(List<Assem.Instr> body);
   public abstract void procEntryExit3(List<Assem.Instr> body);
+  */
 }
