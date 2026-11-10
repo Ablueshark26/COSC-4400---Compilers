@@ -8,6 +8,7 @@ public class BinOpExpr extends Expr{
 	this.e2 = e2;
 }
 	public void accept(Visitor v) {}
+	public Translate.Exp accept(TreeVisitor v) { return null; }
 }
 
 

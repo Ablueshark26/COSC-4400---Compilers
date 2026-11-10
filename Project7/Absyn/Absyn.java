@@ -9,4 +9,7 @@ public abstract class Absyn implements Visitable
 {
     /** Visitor pattern dispatch. */
     public abstract void accept(Visitor v);
+
+    /** Translation visitor dispatch. */
+    public abstract Translate.Exp accept(TreeVisitor v);
 }
