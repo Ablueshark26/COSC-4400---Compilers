@@ -1,6 +1,5 @@
 /**
  * COSC 4400 - Project #7
- * Frame: abstract stack frame for the target architecture.
  * @authors Luke Sam
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu

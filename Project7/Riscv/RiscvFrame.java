@@ -1,3 +1,10 @@
+/**
+ * COSC 4400 - Project #7
+ * @authors Luke Sam
+ * Instructor Dr. Brylow
+ * TA-BOT:MAILTO luke.sharba@marquette.edu
+ * TA-BOT:MAILTO samuel.biskupic@marquette.edu
+ */
 /*
  * Copyright 2024 - Marquette University
  */
@@ -342,6 +349,7 @@ public class RiscvFrame extends Frame.Frame
 	writer.println(")");
     }
 
+    /* Commented out for Project 7 (needs Assem; used in a later phase)
     public void procEntryExit1(List<Tree.Stm> body)
     {
     }
@@ -353,4 +361,5 @@ public class RiscvFrame extends Frame.Frame
     public void procEntryExit3(List<Assem.Instr> body)
     {
     }
+    */
 }
