@@ -262,6 +262,8 @@ public class RiscvFrame extends Frame.Frame
         tempMap.put(A3,   "a3");
         tempMap.put(A4,   "a4");
         tempMap.put(A5,   "a5");
+	tempMap.put(A6,   "a6");
+	tempMap.put(A7,   "a7");
         tempMap.put(S2,   "s2");
         tempMap.put(S3,   "s3");
         tempMap.put(S4,   "s4");
