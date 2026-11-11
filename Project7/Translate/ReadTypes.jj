@@ -1,7 +1,7 @@
 /* Copyright (C) 2007-2013, Marquette University.  All rights reserved. */
 //options { DEBUG_PARSER=true; DEBUG_LOOKAHEAD=true; 
 PARSER_BEGIN(ReadTypes)
-package Parse;
+package Translate;
 import java.util.LinkedList;
 public class ReadTypes {
 
@@ -229,7 +229,7 @@ void ClassDecl(LinkedList<Absyn.ClassDecl> cl) :
 		else parentName = parent.toString();
 		cd = new Absyn.ClassDecl(name.toString(), parentName, vl, ml);
 		cl.add(cd);
-		cd.checktype = checktype;
+		cd.checkType = checktype;
 	}
 }
 
@@ -254,7 +254,7 @@ void ThreadDecl(LinkedList<Absyn.ClassDecl> cl) :
 	{
 		td = new Absyn.ThreadDecl(name.toString(), vl, ml);
 		cl.add(td);
-		td.checktype = checktype;
+		td.checkType = checktype;
 	}
 }
 
@@ -295,11 +295,11 @@ void MethodDecl(LinkedList<Absyn.MethodDecl> ml) :
 		md = new Absyn.MethodDecl(type, sync, name.toString(),
 								  params, locals, stmts, expr); 
 		ml.add(md);
-		md.checktype = checktype;
+		md.checkType = checktype;
 		Types.RECORD r = checktype.formals;
 		for (Absyn.Formal f : params)
 		{
-			f.checktype = r.get(f.name).type;
+			f.checkType = r.get(f.name).type;
 		}
 	}
 }
@@ -329,11 +329,11 @@ void VoidDecl(LinkedList<Absyn.MethodDecl> ml) :
 	{ 
 		vd = new Absyn.VoidDecl(name.toString(), locals, stmts);
 		ml.add(vd); 
-		vd.checktype = checktype;
+		vd.checkType = checktype;
 		Types.RECORD r = checktype.formals;
 		for (Absyn.Formal f : params)
 		{
-			f.checktype = r.get(f.name).type;
+			f.checkType = r.get(f.name).type;
 		}
 	}
 }
@@ -370,7 +370,7 @@ void VarDecl(LinkedList<Absyn.VarDecl> vl) :
 	{
 		vd = new Absyn.VarDecl(type, name.image, init);
 		vl.add(vd); 
-		vd.checktype = checktype;
+		vd.checkType = checktype;
 	}
 }
 
@@ -869,7 +869,7 @@ Absyn.StringLiteral StringLiteral() :
 
 Types.Type TypeDescriptor() :
 {
-	Types.Type t;
+	Types.Type t = null;
 }
 {
 	(
