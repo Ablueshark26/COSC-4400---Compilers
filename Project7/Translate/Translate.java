@@ -1,6 +1,5 @@
 /**
  * COSC 4400 - Project #7
- * Translate
  * @authors Luke Sam
  * Instructor Dr. Brylow
  * TA-BOT:MAILTO luke.sharba@marquette.edu
@@ -21,15 +20,12 @@ import Temp.Temp;
 
 public class Translate implements Absyn.TreeVisitor
 {
-    public static boolean NULL_CHECKS = true;
-    public static boolean BOUNDS_CHECKS = false;
-
     public Frame.Frame frame;
 
     public Translate(Frame.Frame frame) { this.frame = frame; }
 
     private int ws() { return frame.wordSize(); }
-     
+
     private static Tree.Exp CONST(int value)  { return new Tree.CONST(value); }
     private static Tree.Exp NAME(Label label) { return new Tree.NAME(label); }
     private static Tree.Exp TEMP(Temp temp)   { return new Tree.TEMP(temp); }
@@ -39,10 +35,7 @@ public class Translate implements Absyn.TreeVisitor
     private static Tree.Exp CALL(Tree.Exp func, List<Tree.Exp> args)
     {   return new Tree.CALL(func, args);   }
     private static Tree.Exp ESEQ(Tree.Stm stm, Tree.Exp exp)
-    {
-	if (stm == null) return exp;
-	return new Tree.ESEQ(stm, exp);
-    }
+    {   return new Tree.ESEQ(stm, exp);   }
     private static Tree.Stm MOVE(Tree.Exp dst, Tree.Exp src)
     {   return new Tree.MOVE(dst, src);   }
     private static Tree.Stm EXP(Tree.Exp exp) { return new Tree.EXP(exp); }
@@ -61,18 +54,11 @@ public class Translate implements Absyn.TreeVisitor
     private static Tree.Stm seqOf(List<Tree.Stm> stms)
     {
 	Tree.Stm result = null;
-	for (int i = stms.size() - 1; i >= 0; i--)
-	    result = SEQ(stms.get(i), result);
+	for (Tree.Stm s : stms) result = SEQ(result, s);
 	return result;
     }
 
-    private Tree.Exp offset(Tree.Exp base, int bytes)
-    {
-	if (bytes == 0) return base;
-	return BINOP(Tree.BINOP.PLUS, base, CONST(bytes));
-    }
-
-   private LinkedList<Frag> frags = new LinkedList<Frag>();
+     private LinkedList<Frag> frags = new LinkedList<Frag>();
     public List<Frag> results() { return frags; }
 
     private static class MethodInfo
@@ -80,7 +66,6 @@ public class Translate implements Absyn.TreeVisitor
 	String name;
 	Label label;
 	Absyn.Type returnType;  
-	String owner;         
     }
 
     private static class ClassInfo
@@ -103,22 +88,17 @@ public class Translate implements Absyn.TreeVisitor
 	return m.returnType == null && !(m instanceof Absyn.VoidDecl);
     }
 
-    private static boolean isVoid(Absyn.MethodDecl m)
-    {
-	return m instanceof Absyn.VoidDecl || isMain(m);
-    }
-
     private ClassInfo classInfo(String name)
     {
 	if (name == null) return null;
 	ClassInfo ci = classEnv.get(name);
 	if (ci != null) return ci;
 	Absyn.ClassDecl d = declOf.get(name);
-	if (d == null) return null;            
+	if (d == null) return null;          
 	ci = new ClassInfo();
 	ci.name = name;
 	ci.decl = d;
-	classEnv.put(name, ci);                
+	classEnv.put(name, ci);              
 	ci.parent = classInfo(d.parent);
 	ci.vtable = new Label(name + "__vtable");
 	if (ci.parent != null)
@@ -135,12 +115,10 @@ public class Translate implements Absyn.TreeVisitor
 	}
 	for (Absyn.MethodDecl m : d.methods)
 	{
-	    if (isMain(m)) continue;           
 	    MethodInfo mi = new MethodInfo();
 	    mi.name = m.name;
 	    mi.label = new Label(name + "__" + m.name);
 	    mi.returnType = m.returnType;
-	    mi.owner = name;
 	    Integer slot = ci.slotOf.get(m.name);
 	    if (slot == null)
 	    {
@@ -148,7 +126,7 @@ public class Translate implements Absyn.TreeVisitor
 		ci.slots.add(mi);
 	    }
 	    else
-		ci.slots.set(slot, mi);        
+		ci.slots.set(slot, mi);        // override reuses the slot
 	}
 	return ci;
     }
@@ -157,15 +135,9 @@ public class Translate implements Absyn.TreeVisitor
     private Table<Absyn.Type>   typeEnv = new Table<Absyn.Type>();
     private Frame.Frame curFrame;
     private ClassInfo   curClass;
-    private Frame.Access thisAccess;     
+    private Frame.Access thisAccess;
 
     private Tree.Exp thisExp() { return thisAccess.exp(curFrame); }
-
-    private Tree.Exp fieldAddr(Tree.Exp obj, ClassInfo ci, String field)
-    {
-	int idx = ci.fieldIndex.get(field);
-	return offset(obj, (idx + 1) * ws());
-    }
 
     private Absyn.Type typeOf(Absyn.Expr e)
     {
@@ -217,36 +189,18 @@ public class Translate implements Absyn.TreeVisitor
 	return (t instanceof Absyn.IdentifierType) ? ((Absyn.IdentifierType) t).id : null;
     }
 
-    private Tree.Exp stable(Tree.Exp e, List<Tree.Stm> pre)
-    {
-	if (e instanceof Tree.TEMP || e instanceof Tree.CONST) return e;
-	Temp t = new Temp();
-	pre.add(MOVE(TEMP(t), e));
-	return TEMP(t);
-    }
-
-    private Tree.Stm nullCheck(Tree.Exp ptr)
-    {
-	Label ok = new Label();
-	return SEQ(CJUMP(Tree.CJUMP.EQ, ptr, CONST(0), frame.badPtr(), ok),
-		   LABEL(ok));
-    }
-
-    private Tree.Stm boundsCheck(Tree.Exp array, Tree.Exp index)
-    {
-	Label bad = new Label();
-	Label ok  = new Label();
-	return SEQ(CJUMP(Tree.CJUMP.ULT, index, MEM(offset(array, -ws())), ok, bad),
-		   SEQ(LABEL(bad),
-		       SEQ(JUMP(frame.badSub()), LABEL(ok))));
-    }
-
-    private boolean isThis(Absyn.Expr e) { return e instanceof Absyn.ThisExpr; }
-	
-	public Exp visit(Absyn.Program n)
+    public Exp visit(Absyn.Program n)
     {
 	for (Absyn.ClassDecl c : n.classes) declOf.put(c.name, c);
 	for (Absyn.ClassDecl c : n.classes) classInfo(c.name);
+
+	for (Absyn.ClassDecl c : n.classes)
+	{
+	    ClassInfo ci = classInfo(c.name);
+	    List<Label> labels = new ArrayList<Label>();
+	    for (MethodInfo mi : ci.slots) labels.add(mi.label);
+	    frags.add(new DataFrag(frame.record(ci.vtable, labels)));
+	}
 	for (Absyn.ClassDecl c : n.classes) c.accept(this);
 	return new Nx(null);
     }
@@ -254,12 +208,6 @@ public class Translate implements Absyn.TreeVisitor
     public Exp visit(Absyn.ClassDecl c)
     {
 	curClass = classInfo(c.name);
-	List<Label> labels = new ArrayList<Label>();
-	for (MethodInfo mi : curClass.slots) labels.add(mi.label);
-	boolean hasMain = false;
-	for (Absyn.MethodDecl m : c.methods) if (isMain(m)) hasMain = true;
-	if (!hasMain)     // the main class is never instantiated: no vtable
-	    frags.add(new DataFrag(frame.record(curClass.vtable, labels)));
 	for (Absyn.MethodDecl m : c.methods) m.accept(this);
 	curClass = null;
 	return new Nx(null);
@@ -272,28 +220,20 @@ public class Translate implements Absyn.TreeVisitor
 
     public Exp visit(Absyn.MethodDecl m)
     {
-	boolean main = isMain(m);
-	Label label = main ? new Label("main")
-			   : new Label(curClass.name + "__" + m.name);
-	curFrame = frame.newFrame(Symbol.symbol(label.toString()));
+	String name = isMain(m) ? "main" : curClass.name + "__" + m.name;
+	curFrame = frame.newFrame(Symbol.symbol(name));
 
 	varEnv.beginScope();
 	typeEnv.beginScope();
 
-	thisAccess = null;
-	if (!main)
-	    thisAccess = curFrame.allocFormal();     // receiver is formal 0
+	thisAccess = curFrame.allocFormal();       // receiver is formal 0
 	for (Absyn.Formal f : m.params) f.accept(this);
 
 	List<Tree.Stm> body = new ArrayList<Tree.Stm>();
 	for (Absyn.VarDecl v : m.locals)
-	{
-	    Exp init = v.accept(this);
-	    if (init != null && init.unNx() != null) body.add(init.unNx());
-	}
+	    body.add(v.accept(this).unNx());       // every local starts at 0
 	for (Absyn.Stmt s : m.stmts)
 	    body.add(s.accept(this).unNx());
-
 	body.add(MOVE(TEMP(curFrame.RV()), m.returnVal.accept(this).unEx()));
 
 	Tree.Stm result = seqOf(body);
@@ -325,8 +265,8 @@ public class Translate implements Absyn.TreeVisitor
 	Frame.Access a = curFrame.allocLocal();
 	varEnv.put(v.name, a);
 	typeEnv.put(v.name, v.type);
-	if (v.init == null) return new Nx(null);
-	return new Nx(MOVE(a.exp(curFrame), v.init.accept(this).unEx()));
+	Tree.Exp init = (v.init == null) ? CONST(0) : v.init.accept(this).unEx();
+	return new Nx(MOVE(a.exp(curFrame), init));
     }
 
     public Exp visit(Absyn.BooleanType  t)   { return new Nx(null); }
@@ -353,30 +293,20 @@ public class Translate implements Absyn.TreeVisitor
     {
 	Exp cond = s.cond.accept(this);
 	Exp thenPart = s.thenStmt.accept(this);
-	if (s.elseStmt != null)
-	{
-	    Exp elsePart = s.elseStmt.accept(this);
-	    return new Nx(new IfThenElseExp(cond, thenPart, elsePart).unNx());
-	}
-	Label t = new Label();
-	Label f = new Label();
-	return new Nx(SEQ(cond.unCx(t, f),
-			  SEQ(LABEL(t),
-			      SEQ(thenPart.unNx(), LABEL(f)))));
+	Exp elsePart = (s.elseStmt == null) ? new Nx(null) : s.elseStmt.accept(this);
+	return new Nx(new IfThenElseExp(cond, thenPart, elsePart).unNx());
     }
 
     public Exp visit(Absyn.WhileStmt s)
     {
-	Label test = new Label();
-	Label body = new Label();
-	Label done = new Label();
 	Exp cond = s.cond.accept(this);
 	Exp loop = s.body.accept(this);
-	return new Nx(SEQ(LABEL(test),
-			  SEQ(cond.unCx(body, done),
-			      SEQ(LABEL(body),
-				  SEQ(loop.unNx(),
-				      SEQ(JUMP(test), LABEL(done)))))));
+	Label done = new Label();
+	Label test = new Label();
+	Label body = new Label();
+	return new Nx(SEQ(SEQ(SEQ(LABEL(test), cond.unCx(body, done)),
+			      SEQ(SEQ(LABEL(body), loop.unNx()), JUMP(test))),
+			  LABEL(done)));
     }
 
     private Exp Ex(int op, Absyn.BinOpExpr e)
@@ -400,7 +330,6 @@ public class Translate implements Absyn.TreeVisitor
     {
 	Exp e1 = e.e1.accept(this);
 	Exp e2 = e.e2.accept(this);
-	// Short-circuit Boolean AND, with false == 0.
 	return new IfThenElseExp(e1, e2, new Ex(CONST(0)));
     }
 
@@ -408,7 +337,6 @@ public class Translate implements Absyn.TreeVisitor
     {
 	Exp e1 = e.e1.accept(this);
 	Exp e2 = e.e2.accept(this);
-	// Short-circuit Boolean OR, with true == 1.
 	return new IfThenElseExp(e1, new Ex(CONST(1)), e2);
     }
 
@@ -430,68 +358,56 @@ public class Translate implements Absyn.TreeVisitor
 	return new IfThenElseExp(exp, new Ex(CONST(0)), new Ex(CONST(1)));
     }
 
-     public Exp visit(Absyn.NewObjectExpr e)
+    public Exp visit(Absyn.NewObjectExpr e)
     {
 	ClassInfo ci = classInfo(className(e.type));
 	int nfields = (ci == null) ? 0 : ci.fieldIndex.size();
-	Temp r = new Temp();
 	List<Tree.Exp> args = new LinkedList<Tree.Exp>();
-	args.add(CONST((nfields + 1) * ws()));
-	Tree.Stm init = MOVE(TEMP(r), frame.externalCall(Symbol.symbol("new"), args));
-	if (ci != null)
-	    init = SEQ(init, MOVE(MEM(TEMP(r)), NAME(ci.vtable)));
-	return new Ex(ESEQ(init, TEMP(r)));
+	args.add(CONST(nfields));
+	if (ci != null) args.add(NAME(ci.vtable));
+	return new Ex(frame.externalCall(Symbol.symbol("new"), args));
     }
 
-    
     private Tree.Exp initArray(Tree.Exp size)
     {
-	Temp r = new Temp();
-	Temp n = new Temp();
+	Temp t = new Temp();
 	List<Tree.Exp> args = new LinkedList<Tree.Exp>();
-	args.add(BINOP(Tree.BINOP.MUL, BINOP(Tree.BINOP.PLUS, TEMP(n), CONST(1)),
-		       CONST(ws())));
-	Tree.Stm init =
-	    SEQ(MOVE(TEMP(n), size),
-	    SEQ(MOVE(TEMP(r), frame.externalCall(Symbol.symbol("new"), args)),
-		MOVE(MEM(TEMP(r)), TEMP(n))));
-	return ESEQ(init, BINOP(Tree.BINOP.PLUS, TEMP(r), CONST(ws())));
+	args.add(TEMP(t));
+	args.add(TEMP(t));
+	return ESEQ(MOVE(TEMP(t), size),
+		    frame.externalCall(Symbol.symbol("new"), args));
     }
 
     /** Allocate dims[k..], where trailing null dimensions are left unallocated. */
-    private Tree.Exp newArray(List<Tree.Exp> dims, int k)
+    private Tree.Exp newArray(List<Absyn.Expr> dims, int k)
     {
 	boolean last = (k + 1 >= dims.size()) || dims.get(k + 1) == null;
-	if (last) return initArray(dims.get(k));
+	if (last) return initArray(dims.get(k).accept(this).unEx());
 
-	Temp arr = new Temp();
-	Temp i   = new Temp();
+	Temp size = new Temp();
+	Temp arr  = new Temp();
+	Temp i    = new Temp();
 	Label test = new Label(), body = new Label(), done = new Label();
+	Tree.Stm first = MOVE(TEMP(size), dims.get(k).accept(this).unEx());
 	Tree.Exp inner = newArray(dims, k + 1);
 	Tree.Exp slot = BINOP(Tree.BINOP.PLUS, TEMP(arr),
 			      BINOP(Tree.BINOP.MUL, TEMP(i), CONST(ws())));
 	Tree.Stm loop =
 	    SEQ(MOVE(TEMP(i), CONST(0)),
 	    SEQ(LABEL(test),
-	    SEQ(CJUMP(Tree.CJUMP.LT, TEMP(i), dims.get(k), body, done),
+	    SEQ(CJUMP(Tree.CJUMP.LT, TEMP(i), TEMP(size), body, done),
 	    SEQ(LABEL(body),
 	    SEQ(MOVE(MEM(slot), inner),
 	    SEQ(MOVE(TEMP(i), BINOP(Tree.BINOP.PLUS, TEMP(i), CONST(1))),
 	    SEQ(JUMP(test), LABEL(done))))))));
-	return ESEQ(SEQ(MOVE(TEMP(arr), initArray(dims.get(k))), loop), TEMP(arr));
+	return ESEQ(SEQ(first, SEQ(MOVE(TEMP(arr), initArray(TEMP(size))), loop)),
+		    TEMP(arr));
     }
 
     public Exp visit(Absyn.NewArrayExpr e)
     {
-	List<Tree.Stm> pre = new ArrayList<Tree.Stm>();
-	List<Tree.Exp> dims = new ArrayList<Tree.Exp>();
-	for (Absyn.Expr s : e.sizes)
-	{
-	    if (s == null) { dims.add(null); continue; }
-	    dims.add(stable(s.accept(this).unEx(), pre));
-	}
-	Tree.Exp arr = newArray(dims, 0);
-	return new Ex(ESEQ(seqOf(pre), arr));
+	List<Absyn.Expr> dims = new ArrayList<Absyn.Expr>(e.sizes);
+	return new Ex(newArray(dims, 0));
     }
 
     private List<Tree.Exp> args(Tree.Exp first, List<Absyn.Expr> actuals)
@@ -516,25 +432,31 @@ public class Translate implements Absyn.TreeVisitor
 
     public Exp visit(Absyn.CallExpr e)
     {
-	List<Tree.Stm> pre = new ArrayList<Tree.Stm>();
-	Tree.Exp obj = stable(e.object.accept(this).unEx(), pre);
-	if (NULL_CHECKS && !isThis(e.object)) pre.add(nullCheck(obj));
-
+	Tree.Exp obj = e.object.accept(this).unEx();
 	ClassInfo ci = classInfo(className(typeOf(e.object)));
 	Integer slot = (ci == null) ? null : ci.slotOf.get(e.method);
 
+	List<Tree.Exp> actuals = args(null, e.args);
+
+	Temp r = new Temp();
+	Label ok = new Label();
+	actuals.add(0, TEMP(r));
+
 	Tree.Exp call;
 	if (slot == null)
-	{
 	    // Not a user-declared method (e.g. Thread.start): runtime routine.
-	    call = frame.externalCall(Symbol.symbol(e.method), args(obj, e.args));
-	}
+	    call = frame.externalCall(Symbol.symbol(e.method), actuals);
 	else
 	{
-	    Tree.Exp fn = MEM(offset(MEM(obj), slot * ws()));
-	    call = CALL(fn, args(obj, e.args));
+	    Tree.Exp vtable = MEM(BINOP(Tree.BINOP.PLUS, TEMP(r), CONST(-ws())));
+	    Tree.Exp fn = MEM(BINOP(Tree.BINOP.PLUS, vtable, CONST(slot * ws())));
+	    call = CALL(fn, actuals);
 	}
-	return new Ex(ESEQ(seqOf(pre), call));
+	return new Ex(ESEQ(SEQ(MOVE(TEMP(r), obj),
+			       SEQ(CJUMP(Tree.CJUMP.EQ, TEMP(r), CONST(0),
+					 frame.badPtr(), ok),
+				   LABEL(ok))),
+			   call));
     }
 
     public Exp visit(Absyn.FalseExpr e)      { return new Ex(CONST(0)); }
@@ -598,40 +520,61 @@ public class Translate implements Absyn.TreeVisitor
 	return new Ex(thisExp());
     }
 
+    private Exp fieldAccess(Tree.Exp obj, int index)
+    {
+	Label ok = new Label();
+	Temp r = new Temp();
+	return new Ex(ESEQ(SEQ(MOVE(TEMP(r), obj),
+			       CJUMP(Tree.CJUMP.EQ, TEMP(r), CONST(0),
+				     frame.badPtr(), ok)),
+			   ESEQ(LABEL(ok),
+				MEM(BINOP(Tree.BINOP.PLUS, TEMP(r),
+					  CONST(index * ws()))))));
+    }
+
     public Exp visit(Absyn.IdentifierExpr e)
     {
 	Frame.Access a = varEnv.get(e.name);
 	if (a != null) return new Ex(a.exp(curFrame));
 	// otherwise a field of the current class (via this)
 	if (curClass != null && curClass.fieldIndex.containsKey(e.name))
-	    return new Ex(MEM(fieldAddr(thisExp(), curClass, e.name)));
+	    return fieldAccess(thisExp(), curClass.fieldIndex.get(e.name));
 	throw new Error("Translate: unbound identifier " + e.name);
     }
 
     public Exp visit(Absyn.FieldExpr e)
     {
-	List<Tree.Stm> pre = new ArrayList<Tree.Stm>();
-	Tree.Exp obj = stable(e.object.accept(this).unEx(), pre);
+	Tree.Exp obj = e.object.accept(this).unEx();
 	Absyn.Type ot = typeOf(e.object);
 	if (ot instanceof Absyn.ArrayType && e.field.equals("length"))
-	{
-	    return new Ex(ESEQ(seqOf(pre), MEM(offset(obj, -ws()))));
-	}
+	    return fieldAccess(obj, -1);
 	ClassInfo ci = classInfo(className(ot));
 	if (ci == null || !ci.fieldIndex.containsKey(e.field))
 	    throw new Error("Translate: cannot resolve field " + e.field);
-	if (NULL_CHECKS && !isThis(e.object)) pre.add(nullCheck(obj));
-	return new Ex(ESEQ(seqOf(pre), MEM(fieldAddr(obj, ci, e.field))));
+	return fieldAccess(obj, ci.fieldIndex.get(e.field));
     }
 
     public Exp visit(Absyn.ArrayExpr e)
     {
-	List<Tree.Stm> pre = new ArrayList<Tree.Stm>();
-	Tree.Exp arr = stable(e.array.accept(this).unEx(), pre);
-	Tree.Exp idx = stable(e.index.accept(this).unEx(), pre);
-	if (BOUNDS_CHECKS) pre.add(boundsCheck(arr, idx));
-	Tree.Exp addr = BINOP(Tree.BINOP.PLUS, arr,
-			      BINOP(Tree.BINOP.MUL, idx, CONST(ws())));
-	return new Ex(ESEQ(seqOf(pre), MEM(addr)));
+	Tree.Exp arr = e.array.accept(this).unEx();
+	Tree.Exp idx = e.index.accept(this).unEx();
+	Temp a = new Temp();
+	Temp i = new Temp();
+	Label nonNull = new Label();
+	Label nonNeg  = new Label();
+	Label inRange = new Label();
+	Tree.Stm checks =
+	    SEQ(MOVE(TEMP(a), arr),
+	    SEQ(MOVE(TEMP(i), idx),
+	    SEQ(CJUMP(Tree.CJUMP.EQ, TEMP(a), CONST(0), frame.badPtr(), nonNull),
+	    SEQ(LABEL(nonNull),
+	    SEQ(CJUMP(Tree.CJUMP.LT, TEMP(i), CONST(0), frame.badSub(), nonNeg),
+	    SEQ(LABEL(nonNeg),
+		CJUMP(Tree.CJUMP.GE, TEMP(i),
+		      MEM(BINOP(Tree.BINOP.PLUS, TEMP(a), CONST(-ws()))),
+		      frame.badSub(), inRange)))))));
+	Tree.Exp elem = MEM(BINOP(Tree.BINOP.PLUS, TEMP(a),
+				  BINOP(Tree.BINOP.MUL, TEMP(i), CONST(ws()))));
+	return new Ex(ESEQ(checks, ESEQ(LABEL(inRange), elem)));
     }
 }
