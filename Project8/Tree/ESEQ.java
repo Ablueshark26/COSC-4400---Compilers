@@ -17,4 +17,14 @@ public class ESEQ extends Exp
     public ESEQ(Stm s, Exp e) { stm=s; exp=e; }
 
     public void accept(IntVisitor v, int d) { v.visit(this, d); }
+    public Temp accept(CodeVisitor v) { return v.visit(this); }
+    public LinkedList<Exp> kids()
+    {
+        throw new Error("kids() not applicable to ESEQ");
+    }
+    public Exp build(LinkedList<Exp> kids)
+    {
+        throw new Error("build() not applicable to ESEQ");
+    }
+
 }

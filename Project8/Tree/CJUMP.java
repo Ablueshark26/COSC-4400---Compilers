@@ -18,9 +18,39 @@ public class CJUMP extends Stm
 	{
 		relop=rel; left=l; right=r; iftrue=t; iffalse=f;
     }
+    
+    public static int notRel(int relop)
+    {
+        switch (relop)
+        {
+        case EQ:  return NE;
+        case NE:  return EQ;
+        case LT:  return GE;
+        case GE:  return LT;
+        case GT:  return LE;
+        case LE:  return GT;
+        case ULT: return UGE;
+        case UGE: return ULT;
+        case UGT: return ULE;
+        case ULE: return UGT;
+        default:  throw new Error("bad relop in CJUMP.notRel");
+        }
+    }
 
     public final static int EQ=0, NE=1, LT=2, GT=3, LE=4, GE=5,
 		ULT=6, ULE=7, UGT=8, UGE=9;
 
     public void accept(IntVisitor v, int d) { v.visit(this, d); }
+        public void accept(CodeVisitor v) { v.visit(this); }
+    public LinkedList<Exp> kids()
+    {
+        LinkedList<Exp> l = new LinkedList<Exp>();
+        l.add(left);
+        l.add(right);
+        return l;
+    }
+    public Stm build(LinkedList<Exp> kids)
+    {
+        return new CJUMP(relop, kids.get(0), kids.get(1), iftrue, iffalse);
+    }
 }

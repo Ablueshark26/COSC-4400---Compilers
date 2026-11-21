@@ -14,4 +14,13 @@ public class CONST extends Exp
     public int value;
     public CONST(int v) { value=v; }
     public void accept(IntVisitor v, int d) { v.visit(this, d); }
+    public Temp accept(CodeVisitor v) { return v.visit(this); }
+    public LinkedList<Exp> kids()
+    {
+        return new LinkedList<Exp>();
+    }
+    public Exp build(LinkedList<Exp> kids)
+    {
+        return this;
+    }
 }
