@@ -1,0 +1,15 @@
+Program(
+ AbstractList(
+  ClassDecl(T5Parse null
+   AbstractList()
+   AbstractList(
+    MethodDecl(public_static_void main
+     AbstractList(
+      Formal(ArrayType(IdentifierType(String)) args))
+     AbstractList(
+      VarDecl(BooleanType b null))
+     AbstractList(
+      AssignStmt(
+       IdentifierExpr(b)
+       IdentifierExpr(args)))
+     IntegerLiteral(0))))))
