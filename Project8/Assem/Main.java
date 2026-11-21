@@ -30,6 +30,18 @@ public class Main
 		System.err.println("\t-v\tPrint version and exit");
 		System.exit(-2);
 	}
+        private static List<Translate.Frag> translate(String text)
+                throws Parse.ParseException, Translate.ParseException
+        {
+                Absyn.Program program;
+                if (text.trim().startsWith("Program"))
+                        program = new Translate.ReadTypes(new StringReader(text)).Program();
+                else
+                        program = new Parse.MiniJavaParser(new StringReader(text)).Goal();
+                Translate.Translate t = new Translate.Translate(new Riscv.RiscvFrame());
+                program.accept(t);
+                return t.results();
+        }
 
     public static void main(String args[])
     {
@@ -77,15 +89,62 @@ public class Main
 		    }
 	    }
 		
-		if (null == reader) usage();
 		
-		LinkedList<Translate.Frag> frags = null;
+		
+		Riscv.RiscvFrame.allTemps();
 
-		try
-	    {
-			frags = new Parse.ReadFrags(reader).Program();
+                if (null == reader)
+                {
+                        java.io.InputStreamReader isr =
+                                new java.io.InputStreamReader(System.in);
+                        reader = new java.io.BufferedReader(isr);
+                }
+
+                String text = null;
+                try
+                {
+                        StringBuilder sb = new StringBuilder();
+                        char[] buf = new char[4096];
+                        int n;
+                        while ((n = reader.read(buf)) > 0) sb.append(buf, 0, n);
+                        text = sb.toString();
+                }
+                catch (IOException e)
+                {
+                        System.err.println("Cannot read input: " + e.getMessage());
+                        System.exit(-1);
+                }
+
+                if (text.trim().startsWith("ERROR"))
+                {
+                        System.err.println("Earlier phase reported errors; nothing to select:");
+                        System.err.println(text.trim());
+                        System.exit(-1);
+                }
+
+                List<Translate.Frag> frags = null;
+
+                try
+            {
+                        String head = text.trim();
+                        if (head.startsWith("ProcFrag") || head.startsWith("DataFrag")
+                                || head.length() == 0)
+                                frags = new Parse.ReadFrags(new StringReader(text)).Program();
+                        else
+                                frags = translate(text)
 	    }
-		catch (ParseException p)
+                catch (Parse.FragParseException p)
+            {
+                        System.err.println(p.getMessag());
+                        System.exit(-1);
+            }
+                catch (Parse.ParseException p)
+            {
+                        System.err.println(p.toString());
+                        System.exit(-1);
+            }
+
+		catch (Translate.ParseException p)
 	    {
 			System.err.println(p.toString());
 			System.exit(-1);
