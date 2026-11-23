@@ -3,6 +3,8 @@
 
 package Assem;
 import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.IOException;
 import java.util.Iterator;
 
 import Parse.*;
@@ -131,11 +133,11 @@ public class Main
                                 || head.length() == 0)
                                 frags = new Parse.ReadFrags(new StringReader(text)).Program();
                         else
-                                frags = translate(text)
+                                frags = translate(text);
 	    }
                 catch (Parse.FragParseException p)
             {
-                        System.err.println(p.getMessag());
+                        System.err.println(p.getMessage());
                         System.exit(-1);
             }
                 catch (Parse.ParseException p)
