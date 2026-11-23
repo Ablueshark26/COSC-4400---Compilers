@@ -1,6 +1,11 @@
 /* Copyright (C) 2009, Dennis Brylow
  * All rights reserved.  */
-
+/**
+ * @authors Luke Sam
+ * Instructor Dr. Brylow
+ * TA-BOT:MAILTO luke.sharba@marquette.edu
+ * TA-BOT:MAILTO samuel.biskupic@marquette.edu
+ */
 package Assem;
 import java.io.PrintWriter;
 import java.io.StringReader;

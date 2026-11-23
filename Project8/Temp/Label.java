@@ -26,6 +26,15 @@ public class Label
 	public Label(String n) 
 	{
 		name = n;
+		if (n.length() > 1 && n.charAt(0) == 'L')
+		{
+			try
+			{
+				int k = Integer.parseInt(n.substring(1));
+				if (count <= k) count = k + 1;
+			}
+			catch (NumberFormatException e) { }
+		}
 	}
 	
 	/**
