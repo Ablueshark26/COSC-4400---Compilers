@@ -15,6 +15,11 @@ public class Temp
 	{ 
 		num = count++; 
 	}
+    public Temp(int n)
+	{
+		num =n;
+		if(count <= n) count = n + 1;
+	}
     public int hashCode() { return num; }
 	public boolean spillTemp = false;
     public int spillCost;

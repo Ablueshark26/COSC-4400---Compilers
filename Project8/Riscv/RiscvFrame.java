@@ -351,17 +351,77 @@ public class RiscvFrame extends Frame.Frame
 	writer.println(")");
     }
 
-    /* Commented out for Project 7 (needs Assem; used in a later phase)
+    private static final Temp[] all32 =
+    { ZERO, RA, SP, GP, TP, T0, T1, T2, S0, S1, A0, A1, A2, A3, A4, A5,
+      A6, A7, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, T3, T4, T5, T6 };
+
+    public static Temp[] allTemps() { return all32; }
+    public static Temp   zero()     { return ZERO; }
+    public static Temp   sp()       { return SP; }
+    public static Temp   ra()       { return RA; }
+    public static Temp[] argRegs()  { return argRegs; }
+    public static Temp[] calldefs() { return calldefs; }
+
     public void procEntryExit1(List<Tree.Stm> body)
     {
+	LinkedList<Tree.Stm> pre  = new LinkedList<Tree.Stm>();
+	LinkedList<Tree.Stm> post = new LinkedList<Tree.Stm>();
+
+	for (Temp reg : calleeSaves)
+	{
+	    Temp save = new Temp();
+	    pre.add(MOVE(TEMP(save), TEMP(reg)));
+	    post.add(MOVE(TEMP(reg), TEMP(save)));
+	}
+
+	Iterator<Frame.Access> act = actuals.iterator();
+	for (Frame.Access formal : formals)
+	{
+	    Frame.Access actual = act.next();
+	    Tree.Exp src = access(actual);
+	    Tree.Exp dst = access(formal);
+	    if (!sameLocation(formal, actual))
+		pre.add(MOVE(dst, src));
+	}
+
+	body.addAll(0, pre);
+	body.addAll(post);
+    }
+
+    private Tree.Exp access(Frame.Access a)
+    {
+	if (a instanceof InReg)
+	    return TEMP(((InReg) a).temp);
+	int off = ((InFrame) a).offset;
+	return new Tree.MEM(new Tree.BINOP(Tree.BINOP.PLUS,
+					   TEMP(FP), new Tree.CONST(off)));
+    }
+
+    private static boolean sameLocation(Frame.Access a, Frame.Access b)
+    {
+	if (a instanceof InReg && b instanceof InReg)
+	    return ((InReg) a).temp == ((InReg) b).temp;
+	if (a instanceof InFrame && b instanceof InFrame)
+	    return ((InFrame) a).offset == ((InFrame) b).offset;
+	return false;
     }
 
     public void procEntryExit2(List<Assem.Instr> body)
     {
+	body.add(new Assem.OPER("", null, returnSink, null));
     }
 
     public void procEntryExit3(List<Assem.Instr> body)
     {
     }
-    */
+
+    public List<Assem.Instr> codeGen(List<Tree.Stm> stms)
+    {
+	Codegen cg = new Codegen(this);
+	for (Tree.Stm s : stms)
+	    s.accept(cg);
+	List<Assem.Instr> code = cg.instructions();
+	procEntryExit2(code);
+	return code;
+    }
 }
