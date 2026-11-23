@@ -51,9 +51,15 @@ FRAMESRC  = $(wildcard Frame/*.java)
 RISCVSRC  = $(wildcard Riscv/*.java)
 TRANSSRC  = $(filter-out $(RT_JAVACCGEN),$(wildcard Translate/*.java))
 
+# Project 8 - Instruction Selection
+CANONSRC  = $(wildcard Canon/*.java)
+ASSEMSRC  = $(wildcard Assem/*.java)
+FRAGSRC   = Parse/FragParseException.java Parse/ReadFrags.java
+
 PARSESRC = Parse/Main.java $(ASTSRC)
 ALLSRC   = $(PARSESRC) $(TYPESRC) $(SYMSRC) $(SEMANTSRC) \
-        $(TEMPSRC) $(TREESRC) $(FRAMESRC) $(RISCVSRC) $(TRANSSRC)
+        $(TEMPSRC) $(TREESRC) $(FRAMESRC) $(RISCVSRC) $(TRANSSRC) \
+        $(CANONSRC) $(FRAGSRC) $(ASSEMSRC)
 
 all:        $(PARSEDIR)/$(MJ_PARSER).java $(SEMANTDIR)/$(RA_PARSER).java \
         $(TRANSDIR)/$(RT_PARSER).java $(ALLSRC:.java=.class)
