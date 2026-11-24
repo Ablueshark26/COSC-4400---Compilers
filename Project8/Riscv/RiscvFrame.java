@@ -420,8 +420,6 @@ public class RiscvFrame extends Frame.Frame
 	Codegen cg = new Codegen(this);
 	for (Tree.Stm s : stms)
 	    s.accept(cg);
-	List<Assem.Instr> code = cg.instructions();
-	procEntryExit2(code);
-	return code;
+	return cg.instructions();
     }
 }

@@ -23,7 +23,7 @@ public class Codegen implements CodeVisitor
 
     public List<Instr> instructions() { return ilist; }
 
-    /* helpers */
+    /*  helpers  */
 
     private void emit(Instr i) { ilist.add(i); }
 
@@ -34,6 +34,19 @@ public class Codegen implements CodeVisitor
         LinkedList<Label> l = new LinkedList<Label>();
         for (Label x : ls) l.add(x);
         return l;
+    }
+
+    private static String fmt(String op, String... args)
+    {
+        StringBuilder sb = new StringBuilder("\t" + op);
+        for (int i = 0; i < args.length; i++)
+            sb.append(i == 0 ? "\t" : ",\t").append(args[i]);
+        return sb.toString();
+    }
+
+    private static boolean isConst(Exp e, int v)
+    {
+        return e instanceof CONST && ((CONST) e).value == v;
     }
 
     private static boolean const12(Exp e)
@@ -53,21 +66,31 @@ public class Codegen implements CodeVisitor
         return Integer.numberOfTrailingZeros(v);
     }
 
-    private Temp rrr(String op, Temp a, Temp b)
+    private boolean isFP(Exp e)
+    {
+        return e instanceof TEMP && ((TEMP) e).temp == frame.FP();
+    }
+
+    private String framesize() { return frame.name + "_framesize"; }
+
+    private Temp rrr(String op, Exp a, Exp b)
     {
         Temp d = new Temp();
-        emit(new OPER(op + " `d0, `s0, `s1", L(d), L(a, b), null));
+        Temp ta = a.accept(this);
+        Temp tb = b.accept(this);
+        emit(new OPER(fmt(op, "`d0", "`s0", "`s1"), L(d), L(ta, tb), null));
         return d;
     }
 
-    private Temp rri(String op, Temp a, int imm)
+    private Temp rri(String op, Exp a, int imm)
     {
         Temp d = new Temp();
-        emit(new OPER(op + " `d0, `s0, " + imm, L(d), L(a), null));
+        Temp ta = a.accept(this);
+        emit(new OPER(fmt(op, "`d0", "`s0", "" + imm), L(d), L(ta), null));
         return d;
     }
 
-    /* statements */
+    /*  statements  */
 
     public void visit(SEQ n)
     {
@@ -85,12 +108,12 @@ public class Codegen implements CodeVisitor
         if (n.exp instanceof NAME)
         {
             Label target = ((NAME) n.exp).label;
-            emit(new OPER("j `j0", null, null, labels(target)));
+            emit(new OPER(fmt("j", "`j0"), null, null, labels(target)));
         }
         else
         {
             Temp rs = n.exp.accept(this);
-            emit(new OPER("jalr `s0", null, L(rs),
+            emit(new OPER(fmt("jalr", "`s0"), null, L(rs),
                           n.targets == null ? new LinkedList<Label>()
                                             : new LinkedList<Label>(n.targets)));
         }
@@ -118,67 +141,84 @@ public class Codegen implements CodeVisitor
     {
         Temp l = n.left.accept(this);
         Temp r = n.right.accept(this);
-
-        emit(new OPER(branch(n.relop) + " `s0, `s1, `j0", null, L(l, r),
+        emit(new OPER(fmt(branch(n.relop), "`s0", "`s1", "`j0"), null, L(l, r),
                       labels(n.iftrue, n.iffalse)));
     }
-
 
     public void visit(MOVE n)
     {
         if (n.dst instanceof MEM)
         {
             Exp addr = ((MEM) n.dst).exp;
-            Temp base;
-            int off = 0;
-            if (addr instanceof BINOP && ((BINOP) addr).binop == BINOP.PLUS
-                && const12(((BINOP) addr).right))
+
+            if (addr instanceof BINOP && ((BINOP) addr).binop == BINOP.PLUS)
             {
-                base = ((BINOP) addr).left.accept(this);
-                off = val(((BINOP) addr).right);
+                BINOP p = (BINOP) addr;
+                Exp base = null; Exp k = null;
+                if (const12(p.right))     { base = p.left;  k = p.right; }
+                else if (const12(p.left)) { base = p.right; k = p.left;  }
+
+                if (base != null && isFP(base))          // MEM(fp + k)
+                {
+                    Temp src = n.src.accept(this);
+                    emit(new OPER(fmt("sw", "`s0", val(k) + "+" + framesize() + "(`s1)"),
+                                  null, L(src, RiscvFrame.sp()), null));
+                    return;
+                }
+                if (base != null)                        // MEM(e + k)
+                {
+                    Temp b = base.accept(this);
+                    Temp src = n.src.accept(this);
+                    emit(new OPER(fmt("sw", "`s0", val(k) + "(`s1)"),
+                                  null, L(src, b), null));
+                    return;
+                }
             }
-            else if (addr instanceof BINOP && ((BINOP) addr).binop == BINOP.PLUS
-                     && const12(((BINOP) addr).left))
-            {
-                base = ((BINOP) addr).right.accept(this);
-                off = val(((BINOP) addr).left);
-            }
-            else
-                base = addr.accept(this);
+            Temp b = addr.accept(this);                  // MEM(e)
             Temp src = n.src.accept(this);
-            emit(new OPER("sw `s0, " + off + "(`s1)", null, L(src, base), null));
+            emit(new OPER(fmt("sw", "`s0", "(`s1)"), null, L(src, b), null));
         }
         else if (n.dst instanceof TEMP)
         {
             Temp d = ((TEMP) n.dst).temp;
             Temp s = n.src.accept(this);
-            emit(new Assem.MOVE("mv `d0, `s0", d, s));
+            emit(new Assem.MOVE(fmt("mv", "`d0", "`s0"), d, s));
         }
         else
             throw new Error("Codegen: MOVE destination must be TEMP or MEM");
     }
 
-public void visit(EXP n)
+    public void visit(EXP n)
     {
         n.exp.accept(this);
     }
 
-    /* expressions */
+    /*  expressions  */
 
-    public Temp visit(TEMP n) { return n.temp; }
+    public Temp visit(TEMP n)
+    {
+        if (n.temp == frame.FP())                        // virtual fp
+        {
+            Temp d = new Temp();
+            emit(new OPER(fmt("addi", "`d0", "`s0", framesize()),
+                          L(d), L(RiscvFrame.sp()), null));
+            return d;
+        }
+        return n.temp;
+    }
 
     public Temp visit(CONST n)
     {
         if (n.value == 0) return RiscvFrame.zero();
         Temp d = new Temp();
-        emit(new OPER("li `d0, " + n.value, L(d), null, null));
+        emit(new OPER(fmt("li", "`d0", "" + n.value), L(d), null, null));
         return d;
     }
 
     public Temp visit(NAME n)
     {
         Temp d = new Temp();
-        emit(new OPER("la `d0, " + n.label, L(d), null, null));
+        emit(new OPER(fmt("la", "`d0", n.label.toString()), L(d), null, null));
         return d;
     }
 
@@ -190,27 +230,30 @@ public void visit(EXP n)
     public Temp visit(MEM n)
     {
         Exp a = n.exp;
+        Temp d = new Temp();                             // result first
+
         if (a instanceof BINOP && ((BINOP) a).binop == BINOP.PLUS)
         {
             BINOP p = (BINOP) a;
-            if (const12(p.left))
+            Exp base = null; Exp k = null;
+            if (const12(p.right))     { base = p.left;  k = p.right; }
+            else if (const12(p.left)) { base = p.right; k = p.left;  }
+
+            if (base != null && isFP(base))              // MEM(fp + k)
             {
-                Temp rs = p.right.accept(this);
-                return load(rs, val(p.left));
+                emit(new OPER(fmt("lw", "`d0", val(k) + "+" + framesize() + "(`s0)"),
+                              L(d), L(RiscvFrame.sp()), null));
+                return d;
             }
-            if (const12(p.right))
+            if (base != null)                            // MEM(e + k)
             {
-                Temp rs = p.left.accept(this);
-                return load(rs, val(p.right));
+                Temp b = base.accept(this);
+                emit(new OPER(fmt("lw", "`d0", val(k) + "(`s0)"), L(d), L(b), null));
+                return d;
             }
         }
-        return load(a.accept(this), 0);
-    }
-
-    private Temp load(Temp base, int off)
-    {
-        Temp d = new Temp();
-        emit(new OPER("lw `d0, " + off + "(`s0)", L(d), L(base), null));
+        Temp b = a.accept(this);                         // MEM(e)
+        emit(new OPER(fmt("lw", "`d0", "(`s0)"), L(d), L(b), null));
         return d;
     }
 
@@ -220,53 +263,48 @@ public void visit(EXP n)
         switch (n.binop)
         {
         case BINOP.PLUS:
-            if (const12(r)) return rri("addi", l.accept(this), val(r));
-            if (const12(l)) return rri("addi", r.accept(this), val(l));
-            return rrr("add", l.accept(this), r.accept(this));
+            if (isConst(r, 0)) { new Temp(); return l.accept(this); }
+            if (isConst(l, 0)) { new Temp(); return r.accept(this); }
+            if (const12(r)) return rri("addi", l, val(r));
+            if (const12(l)) return rri("addi", r, val(l));
+            return rrr("add", l, r);
 
         case BINOP.MINUS:
-            if (const12(r) && val(r) != -2048)
-                return rri("addi", l.accept(this), -val(r));
-            return rrr("sub", l.accept(this), r.accept(this));
+            if (isConst(r, 0)) { new Temp(); return l.accept(this); }
+            if (const12(r) && val(r) != -2048) return rri("addi", l, -val(r));
+            return rrr("sub", l, r);
 
         case BINOP.MUL:
         {
             int k;
-            if ((k = log2(r)) > 0) return rri("sll", l.accept(this), k);
-            if ((k = log2(l)) > 0) return rri("sll", r.accept(this), k);
-            return rrr("mul", l.accept(this), r.accept(this));
+            if ((k = log2(r)) > 0) return rri("sll", l, k);
+            if ((k = log2(l)) > 0) return rri("sll", r, k);
+            return rrr("mul", l, r);
         }
 
-        case BINOP.DIV:
-        {
-            int k = log2(r);
-            if (k > 0) return rri("sra", l.accept(this), k);
-            return rrr("div", l.accept(this), r.accept(this));
-        }
+        case BINOP.DIV:                                  // reference: always div
+            return rrr("div", l, r);
 
         case BINOP.AND:
         case BINOP.BITAND:
-            if (const12(r)) return rri("andi", l.accept(this), val(r));
-            if (const12(l)) return rri("andi", r.accept(this), val(l));
-            return rrr("and", l.accept(this), r.accept(this));
+            if (const12(r)) return rri("andi", l, val(r));
+            if (const12(l)) return rri("andi", r, val(l));
+            return rrr("and", l, r);
 
         case BINOP.OR:
         case BINOP.BITOR:
-            if (const12(r)) return rri("ori", l.accept(this), val(r));
-            if (const12(l)) return rri("ori", r.accept(this), val(l));
-            return rrr("or", l.accept(this), r.accept(this));
+            if (const12(r)) return rri("ori", l, val(r));
+            if (const12(l)) return rri("ori", r, val(l));
+            return rrr("or", l, r);
 
         case BINOP.BITXOR:
-            if (const12(r)) return rri("xori", l.accept(this), val(r));
-            if (const12(l)) return rri("xori", r.accept(this), val(l));
-            return rrr("xor", l.accept(this), r.accept(this));
+            if (const12(r)) return rri("xori", l, val(r));
+            if (const12(l)) return rri("xori", r, val(l));
+            return rrr("xor", l, r);
 
-        case BINOP.LSHIFT:
-            return shift("sll", l, r);
-        case BINOP.RSHIFT:
-            return shift("srl", l, r);
-        case BINOP.ARSHIFT:
-            return shift("sra", l, r);
+        case BINOP.LSHIFT:  return shift("sll", l, r);
+        case BINOP.RSHIFT:  return shift("srl", l, r);
+        case BINOP.ARSHIFT: return shift("sra", l, r);
 
         default:
             throw new Error("Codegen: unknown BINOP " + n.binop);
@@ -275,18 +313,14 @@ public void visit(EXP n)
 
     private Temp shift(String op, Exp l, Exp r)
     {
-        if (const12(r)) return rri(op, l.accept(this), val(r));
-        return rrr(op, l.accept(this), r.accept(this));
+        if (const12(r)) return rri(op, l, val(r));
+        return rrr(op, l, r);
     }
 
     public Temp visit(CALL n)
     {
-        Temp fn = null;
-        if (!(n.func instanceof NAME)) fn = n.func.accept(this);
-
         Temp[] argRegs = RiscvFrame.argRegs();
-        LinkedList<Temp> uses = new LinkedList<Temp>();
-        if (fn != null) uses.add(fn);
+        LinkedList<Temp> argUses = new LinkedList<Temp>();
 
         int i = 0;
         for (Exp arg : n.args)
@@ -294,13 +328,13 @@ public void visit(EXP n)
             Temp t = arg.accept(this);
             if (i < argRegs.length)
             {
-                emit(new Assem.MOVE("mv `d0, `s0", argRegs[i], t));
-                uses.add(argRegs[i]);
+                emit(new Assem.MOVE(fmt("mv", "`d0", "`s0"), argRegs[i], t));
+                argUses.add(argRegs[i]);
             }
             else
             {
                 int off = (i - argRegs.length) * frame.wordSize();
-                emit(new OPER("sw `s0, " + off + "(`s1)", null,
+                emit(new OPER(fmt("sw", "`s0", off + "(`s1) //Tree.CALL"), null,
                               L(t, RiscvFrame.sp()), null));
                 frame.maxArgOffset = Math.max(frame.maxArgOffset,
                                               off + frame.wordSize());
@@ -308,12 +342,21 @@ public void visit(EXP n)
             i++;
         }
 
-        Temp[] use = uses.toArray(new Temp[0]);
         if (n.func instanceof NAME)
-            emit(new OPER("call " + ((NAME) n.func).label,
-                          RiscvFrame.calldefs(), use, null));
+        {
+            emit(new OPER(fmt("call", ((NAME) n.func).label.toString()),
+                          RiscvFrame.calldefs(),
+                          argUses.toArray(new Temp[0]), null));
+        }
         else
-            emit(new OPER("jalr `s0", RiscvFrame.calldefs(), use, null));
+        {
+            Temp fn = n.func.accept(this);
+            argUses.addFirst(fn);
+            emit(new OPER(fmt("jalr", "`s0"), RiscvFrame.calldefs(),
+                          argUses.toArray(new Temp[0]), null));
+        }
+
+        emit(new OPER("\t// Call sink", null, RiscvFrame.calldefs(), null));
         return frame.RV();
     }
 }

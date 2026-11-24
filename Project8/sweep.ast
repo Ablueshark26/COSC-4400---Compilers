@@ -1,0 +1,112 @@
+Program(
+ AbstractList(
+  ClassDecl(sweep null
+   AbstractList()
+   AbstractList(
+    MethodDecl(public_static_void main
+     AbstractList(
+      Formal(ArrayType(IdentifierType(String)) a))
+     AbstractList()
+     AbstractList(
+      XinuCallStmt(printint
+       AbstractList(
+        CallExpr(
+         NewObjectExpr(IdentifierType(Fac))
+         compute
+         AbstractList(
+          IntegerLiteral(10))))))
+     IntegerLiteral(0))))
+  ClassDecl(Fac null
+   AbstractList(
+    VarDecl(IntegerType count null))
+   AbstractList(
+    MethodDecl(IntegerType compute
+     AbstractList(
+      Formal(IntegerType num))
+     AbstractList(
+      VarDecl(IntegerType r null)
+      VarDecl(IntegerType i null))
+     AbstractList(
+      AssignStmt(
+       IdentifierExpr(r)
+       IntegerLiteral(1))
+      AssignStmt(
+       IdentifierExpr(i)
+       IdentifierExpr(num))
+      WhileStmt(
+       LesserExpr(
+        IntegerLiteral(0)
+        IdentifierExpr(i))
+       BlockStmt(
+        AbstractList(
+         AssignStmt(
+          IdentifierExpr(r)
+          MulExpr(
+           IdentifierExpr(r)
+           IdentifierExpr(i)))
+         AssignStmt(
+          IdentifierExpr(i)
+          SubExpr(
+           IdentifierExpr(i)
+           IntegerLiteral(1)))
+         AssignStmt(
+          IdentifierExpr(count)
+          AddExpr(
+           IdentifierExpr(count)
+           IntegerLiteral(1))))))
+      IfStmt(
+       AndExpr(
+        LesserExpr(
+         IdentifierExpr(r)
+         IntegerLiteral(100))
+        NotExpr(
+         EqualExpr(
+          IdentifierExpr(r)
+          IntegerLiteral(7))))
+       AssignStmt(
+        IdentifierExpr(r)
+        DivExpr(
+         IdentifierExpr(r)
+         IntegerLiteral(4)))
+       AssignStmt(
+        IdentifierExpr(r)
+        SubExpr(
+         IdentifierExpr(r)
+         IntegerLiteral(4096)))))
+     AddExpr(
+      IdentifierExpr(r)
+      CallExpr(
+       ThisExpr
+       many
+       AbstractList(
+        IntegerLiteral(1)
+        IntegerLiteral(2)
+        IntegerLiteral(3)
+        IntegerLiteral(4)
+        IntegerLiteral(5)
+        IntegerLiteral(6)
+        IntegerLiteral(7)
+        IntegerLiteral(8)
+        IntegerLiteral(9)
+        IntegerLiteral(10)))))
+    MethodDecl(IntegerType many
+     AbstractList(
+      Formal(IntegerType a)
+      Formal(IntegerType b)
+      Formal(IntegerType c)
+      Formal(IntegerType d)
+      Formal(IntegerType e)
+      Formal(IntegerType f)
+      Formal(IntegerType g)
+      Formal(IntegerType h)
+      Formal(IntegerType i)
+      Formal(IntegerType j))
+     AbstractList()
+     AbstractList()
+     SubExpr(
+      AddExpr(
+       IdentifierExpr(a)
+       MulExpr(
+        IdentifierExpr(j)
+        IntegerLiteral(8)))
+      IdentifierExpr(i)))))))

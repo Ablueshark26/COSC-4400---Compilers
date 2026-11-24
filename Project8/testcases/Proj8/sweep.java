@@ -1,6 +1,6 @@
 class sweep {
     public static void main(String[] a) {
-        Xinu.print(new Fac().compute(10));
+        Xinu.printint(new Fac().compute(10));
     }
 }
 
