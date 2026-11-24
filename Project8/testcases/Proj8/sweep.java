@@ -1,4 +1,4 @@
-class Codegen {
+class sweep {
     public static void main(String[] a) {
         Xinu.print(new Fac().compute(10));
     }
