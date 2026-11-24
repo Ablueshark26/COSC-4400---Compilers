@@ -13,6 +13,8 @@ RA_PARSER=ReadAbsyn
 TRANSDIR=Translate
 RT_PARSER=ReadTypes
 
+RF_PARSER=ReadFrags
+
 MJ_JAVACCGEN = $(PARSEDIR)/SimpleCharStream.java \
 	$(PARSEDIR)/ParseException.java \
 	$(PARSEDIR)/Token.java \
@@ -36,6 +38,10 @@ RT_JAVACCGEN = $(TRANSDIR)/SimpleCharStream.java \
         $(TRANSDIR)/$(RT_PARSER).java \
         $(TRANSDIR)/$(RT_PARSER)Constants.java \
         $(TRANSDIR)/$(RT_PARSER)TokenManager.java
+
+RF_JAVACCGEN = $(PARSEDIR)/$(RF_PARSER).java \
+        $(PARSEDIR)/$(RF_PARSER)Constants.java \
+        $(PARSEDIR)/$(RF_PARSER)TokenManager.java
 
 # Project 4 - Parser + Checker
 
@@ -62,7 +68,8 @@ ALLSRC   = $(PARSESRC) $(TYPESRC) $(SYMSRC) $(SEMANTSRC) \
         $(CANONSRC) $(FRAGSRC) $(ASSEMSRC)
 
 all:        $(PARSEDIR)/$(MJ_PARSER).java $(SEMANTDIR)/$(RA_PARSER).java \
-        $(TRANSDIR)/$(RT_PARSER).java $(ALLSRC:.java=.class)
+        $(TRANSDIR)/$(RT_PARSER).java $(PARSEDIR)/$(RF_PARSER).java \
+		$(ALLSRC:.java=.class)
 
 $(PARSEDIR)/$(MJ_PARSER).java: $(PARSEDIR)/$(MJ_PARSER).jj
 	cd $(PARSEDIR); ${JAVACC} $(MJ_PARSER).jj;
@@ -76,6 +83,10 @@ $(TRANSDIR)/$(RT_PARSER).java: $(TRANSDIR)/$(RT_PARSER).jj
 		cd $(TRANSDIR);	${JAVACC} $(RT_PARSER).jj;
 		${JAVAC} ${JFLAGS} ${RT_JAVACCGEN}
 
+$(PARSEDIR)/$(RF_PARSER).java: $(PARSEDIR)/$(RF_PARSER).jj $(PARSEDIR)/$(MJ_PARSER).java
+	cd $(PARSEDIR); ${JAVACC} $(RF_PARSER).jj;
+	${JAVAC} ${JFLAGS} ${RF_JAVACCGEN}
+
 %.class : %.java
 	${JAVAC} ${JFLAGS} $<
 
@@ -84,6 +95,9 @@ clean:
 		$(MJ_JAVACCGEN) $(MJ_JAVACCGEN:.java=.class) \
 		$(RA_JAVACCGEN) $(RA_JAVACCGEN:.java=.class) \
 		$(RT_JAVACCGEN) $(RT_JAVACCGEN:.java=.class) \
+		$(RF_JAVACCGEN) $(RF_JAVACCGEN:.java=.class) \
+                '$(PARSEDIR)/$(RF_PARSER)$$JJCalls.class' \
+                '$(PARSEDIR)/$(RF_PARSER)$$LookaheadSuccess.class' \
                 '$(PARSEDIR)/$(MJ_PARSER)$$JJCalls.class' \
                 '$(PARSEDIR)/$(MJ_PARSER)$$LookaheadSuccess.class' \
                 '$(SEMANTDIR)/$(RA_PARSER)$$JJCalls.class' \

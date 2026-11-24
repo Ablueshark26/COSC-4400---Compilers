@@ -1,0 +1,499 @@
+////////////////////////////
+// Stage 5 Input Parser   //
+// COSC 170 Spring 2009   //
+// D.W.Brylow             //
+// 2009 Apr 11            //
+////////////////////////////
+PARSER_BEGIN(ReadFrags)
+package Parse;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+    public class ReadFrags
+    {
+        static private Frame.Frame masterFrame;
+
+        static HashMap<Integer, Temp.Temp>  tempVector = null;
+        static HashMap<Integer, Temp.Label> labelVector = null;
+
+        static Temp.Temp getTemp(int num)
+        {
+            if (num < 0)
+                {
+                    System.err.println("ERROR: getTemp(" + num + ")");
+                    return null;
+                }
+            if (null == tempVector)
+                {
+                    tempVector = new HashMap<Integer, Temp.Temp>();
+                    for( Temp.Temp t : masterFrame.allRegs())
+                    { tempVector.put(t.hashCode(), t); }
+                    // Temp.Temp[] regs = masterFrame.allRegs();
+                    // for (int i = 0; i < regs.length; i++)
+                    // { tempVector.add(regs[i]); }
+                }
+
+            if (!tempVector.containsKey(num)) {
+                        tempVector.put(num, new Temp.Temp());
+                }
+                return tempVector.get(num);
+        }
+
+        static Temp.Label getLabel(String s)
+        {
+            if (null == labelVector) labelVector = new HashMap<Integer, Temp.Label>();
+
+            int num = Integer.MIN_VALUE;
+            if (s.startsWith("L"))
+                        num = parseInt(s.substring(1));
+            if (num == Integer.MIN_VALUE) return new Temp.Label(s);
+
+                if (!labelVector.containsKey(num)) {
+                        labelVector.put(num, new Temp.Label());
+                }
+                return labelVector.get(num);
+        }
+
+        static int parseInt(String s)
+        {
+            try
+                {
+                    return Integer.parseInt(s);
+                }
+            catch (Exception e)
+                {
+                    // System.err.println("ERROR: parseInt(" + s + ")");
+                    return Integer.MIN_VALUE;
+                }
+        }
+
+    }
+PARSER_END(ReadFrags)
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " " | "\t" | "\n" | "\r" | "\f"
+}
+
+/* RESERVED WORDS, OPERATORS, etc  */
+
+TOKEN :
+{
+  < DOT:   "." >
+| < LPAREN:"(" >
+| < RPAREN:")" >
+| < LANGLE:"<" >
+| < RANGLE:">" >
+| < COMMA: "," >
+| < COLON: ":" >
+| < DQUOTE: "\"">
+
+| < ALIGN: "align" >
+| < ASCIZ: "asciz" >
+| < ASCIIZ: "asciiz" >
+| < DATA:  "data" >
+| < SECTION: "section" >
+| < WORD:  "word" >
+
+| < DATAFRAG: "DataFrag" >
+| < PROCFRAG: "ProcFrag" >
+| < RISCVFRAME: "Riscv.RiscvFrame" >
+| < ACTUALS:  "Actuals" >
+| < FORMALS:  "Formals" >
+| < BADPTR:   "BadPtr" >
+| < BADSUB:   "BadSub" >
+| < MAXARG:   "maxArgOffset" >
+| < INREG:    "InReg" >
+| < INFRAME:  "InFrame" >
+
+| < BINOP:  "BINOP" >
+| < MEM:    "MEM" >
+| < TEMP:   "TEMP" >
+| < CALL:   "CALL" >
+| < CONST:  "CONST" >
+| < EXP:    "EXP" >
+| < JUMP:   "JUMP" >
+| < MOVE:   "MOVE" >
+| < SEQ:    "SEQ" >
+| < CJUMP:  "CJUMP" >
+| < ESEQ:   "ESEQ" >
+| < LABEL:  "LABEL" >
+| < NAME:   "NAME" >
+
+| < EQ:     "EQ" >
+| < NE:     "NE" >
+| < LT:     "LT" >
+| < GT:     "GT" >
+| < LE:     "LE" >
+| < GE:     "GE" >
+| < ULT:    "ULT" >
+| < ULE:    "ULE" >
+| < UGT:    "UGT" >
+| < UGE:    "UGE" >
+
+| < PLUS:   "PLUS" >
+| < MINUS:  "MINUS" >
+| < MUL:    "MUL" >
+| < DIV:    "DIV" >
+| < AND:    "AND" >
+| < OR:     "OR" >
+| < SLL:    "SLL" >
+| < SRL:    "SRL" >
+| < SRA:    "SRA" >
+| < BITAND: "BITAND" >
+| < BITOR:  "BITOR" >
+| < BITXOR: "BITXOR" >
+
+/* LITERALS */
+
+| < NUM:    ( "-")? ( ["1"-"9"] (["0"-"9"])* | "0" ) >
+
+/* IDENTIFIERS */
+
+| < ID: ( ["A" - "Z"] | ["a" - "z"] | ["0" - "9"] | "_" )
+               ( ["A" - "Z"] | ["a" - "z"] | ["0" - "9"] | "_" | "." )* >
+| <STRINGVAL: "\""  (~["\""])*  "\"" >
+
+}
+
+
+/********************************
+ * Language grammar starts here *
+ ********************************/
+
+LinkedList<Translate.Frag> Program() :
+{
+    LinkedList<Translate.Frag> frags = new LinkedList<Translate.Frag>();
+    Translate.Frag frag = null;
+}
+{
+    ( 
+      frag = DataFrag() { frags.add(frag); }
+      |
+      frag = ProcFrag() { frags.add(frag); }
+    )*
+    { return frags; }
+}
+
+Translate.Frag DataFrag() :
+{
+    Token name = null;
+    Token num = null;
+    String s = new String();
+}
+{
+        <DATAFRAG> <LPAREN>
+    <DOT> [ <SECTION> <DOT> { s = s + "\t.section"; } ]
+    <DATA> { s = s + "\t.data\n"; }
+    [ <DOT> <ALIGN>     { s = s + "\t.align"; }
+      [ num = <NUM> ]
+        {
+            if (null == num) s = s + "\n"; else s = s + " " + num.image + "\n";
+        }
+    ]
+    name = <ID> <COLON> { s = s + name.image + ":\n"; }
+    (
+     LOOKAHEAD(2) <DOT> <ASCIZ> name = <STRINGVAL>
+        { s = s.substring(0,s.length() - 1)
+          + "\t.asciz\t" + name.image;}
+     |
+    LOOKAHEAD(2) <DOT> <ASCIIZ> name = <STRINGVAL>
+        { s = s.substring(0,s.length() - 1)
+          + "\t.asciiz\t" + name.image;}
+     |
+     (LOOKAHEAD(2)  <DOT> <WORD> name = <ID>
+         { s = s + "\t.word " + name.image + "\n";}
+      )*
+    )
+        <RPAREN>
+    { return new Translate.DataFrag(s); }
+}
+
+
+Translate.Frag ProcFrag() :
+{
+    Tree.Stm body = null;
+    Frame.Frame frame = null;
+}
+{
+        <PROCFRAG> <LPAREN>
+        frame = Frame()
+        [ body = Stm() ]
+        <RPAREN>
+    { return new Translate.ProcFrag(body, frame); }
+}
+
+Frame.Frame Frame() :
+{
+    Token name = null;
+    Frame.Frame frame = null;
+
+    LinkedList formals = null;
+    LinkedList actuals = null;
+}
+{
+        <RISCVFRAME>      { masterFrame = new Riscv.RiscvFrame(); }
+        <LPAREN>
+    name = <ID> <COLON> { frame = masterFrame.newFrame(
+            Symbol.Symbol.get(name.image)); }
+    formals = FormalList() { frame.formals = formals; }
+    actuals = FormalList() { frame.actuals = actuals; }
+    [ <BADPTR> <LPAREN> name = <ID> <RPAREN>
+      { if (!(frame.badPtr().toString().equals(name.image)))
+                   System.err.println("badPtr name does not match! " + name.image);
+          } ]
+    [ <BADSUB> <LPAREN> name = <ID> <RPAREN>
+      { if (!(frame.badSub().toString().equals(name.image)))
+                   System.err.println("badSub name does not match! " + name.image);
+          } ]
+    [ <MAXARG> <LPAREN> name = <NUM> <RPAREN>
+        {
+                ((Riscv.RiscvFrame)frame).maxArgOffset = parseInt(name.image);
+        } ]
+        <RPAREN>
+        { return frame; }
+}
+
+LinkedList FormalList() :
+{
+    LinkedList list = new LinkedList();
+    Token t = null;
+    String s;
+    int tempNum = 0;
+    Frame.Access access = null;
+}
+{
+        ( <FORMALS> | <ACTUALS> )
+    <LPAREN>
+        (
+          access = InReg() { list.add(access); }
+       |
+          access = InFrame() { list.add(access); }
+    )*
+         <RPAREN>
+        { return list; }
+}
+
+Frame.Access InReg() :
+{
+    Token t;
+    String s;
+    int tempNum;
+}
+{
+    <INREG> <LPAREN> t = <ID> <RPAREN>
+        {
+                 s = t.image.substring(1);
+                 tempNum = parseInt(s);
+                 return new Riscv.InReg(getTemp(tempNum));
+        }
+}
+
+Frame.Access InFrame() :
+{
+    Token t;
+}
+{
+    <INFRAME> <LPAREN> t = <NUM> <RPAREN>
+        {
+                return new Riscv.InFrame(parseInt(t.image));
+        }
+}
+
+Tree.Stm Stm() :
+{
+    Tree.Stm stm;
+}
+{
+    (
+     stm = MOVE()
+|
+     stm = EXP()
+|
+     stm = JUMP()
+|
+     stm = CJUMP()
+|
+     stm = SEQ()
+|
+     stm = LABEL()
+    )
+    { return stm; }
+}
+
+Tree.Exp Exp() :
+{
+    Tree.Exp exp;
+}
+{
+    (
+     exp = CONST()
+|
+     exp = NAME()
+|
+     exp = TEMP()
+|
+     exp = BINOP()
+|
+     exp = MEM()
+|
+     exp = CALL()
+|
+     exp = ESEQ()
+    )
+ { return exp; }
+}
+
+
+
+Tree.BINOP BINOP() :
+{
+    int binop;
+    Tree.Exp left, right;
+}
+{
+ <BINOP> <LPAREN>
+      (  <PLUS>    { binop = Tree.BINOP.PLUS;    }
+      |  <MINUS>   { binop = Tree.BINOP.MINUS;   }
+      |  <MUL>     { binop = Tree.BINOP.MUL;     }
+      |  <DIV>     { binop = Tree.BINOP.DIV;     }
+      |  <AND>     { binop = Tree.BINOP.AND;     }
+      |  <OR>      { binop = Tree.BINOP.OR;      }
+      |  <SLL>     { binop = Tree.BINOP.LSHIFT;  }
+      |  <SRL>     { binop = Tree.BINOP.RSHIFT;  }
+      |  <SRA>     { binop = Tree.BINOP.ARSHIFT; }
+      |  <BITAND>  { binop = Tree.BINOP.BITAND;  }
+      |  <BITOR>   { binop = Tree.BINOP.BITOR;   }
+      |  <BITXOR>  { binop = Tree.BINOP.BITXOR;  }
+      )
+      left = Exp()
+      right = Exp()
+      <RPAREN>
+     { return new Tree.BINOP(binop, left, right); }
+}
+
+Tree.CALL CALL() :
+{
+    Tree.Exp target, arg;
+    LinkedList args = new LinkedList();
+}
+{
+        <CALL> <LPAREN>
+        target = Exp()
+        ( arg = Exp() { args.add(arg); } )*
+        <RPAREN>
+        { return new Tree.CALL(target, args); }
+}
+
+Tree.CJUMP CJUMP() :
+{
+    int relop;
+    Tree.Exp left, right;
+    Token tLabel, fLabel;
+}
+{
+ <CJUMP> <LPAREN>
+      (  <EQ>  { relop = Tree.CJUMP.EQ;  }
+      |  <NE>  { relop = Tree.CJUMP.NE;  }
+      |  <LT>  { relop = Tree.CJUMP.LT;  }
+      |  <GT>  { relop = Tree.CJUMP.GT;  }
+      |  <LE>  { relop = Tree.CJUMP.LE;  }
+      |  <GE>  { relop = Tree.CJUMP.GE;  }
+      |  <ULT> { relop = Tree.CJUMP.ULT; }
+      |  <ULE> { relop = Tree.CJUMP.ULE; }
+      |  <UGT> { relop = Tree.CJUMP.UGT; }
+      |  <UGE> { relop = Tree.CJUMP.UGE; }
+      )
+      left = Exp()
+      right = Exp()
+      tLabel = <ID>
+      fLabel = <ID>
+      <RPAREN>
+     { return new Tree.CJUMP(relop, left, right,
+                             getLabel(tLabel.image),
+                             getLabel(fLabel.image)); }
+}
+
+Tree.CONST CONST() :
+{   Token t;   }
+{
+    <CONST> <LPAREN> t = <NUM> <RPAREN>
+        { return new Tree.CONST(parseInt(t.image)); }
+}
+
+Tree.ESEQ ESEQ() :
+{   Tree.Stm stm; Tree.Exp exp;   }
+{
+    <ESEQ> <LPAREN>
+        stm = Stm()
+        exp = Exp()
+        <RPAREN>
+        { return new Tree.ESEQ(stm,exp); }
+}
+
+Tree.EXP EXP() :
+{   Tree.Exp exp = null;   }
+{
+        <EXP> <LPAREN> exp = Exp() <RPAREN>
+        { return new Tree.EXP(exp); }
+}
+
+Tree.JUMP JUMP() :
+{   Tree.NAME name; }
+{
+        <JUMP> <LPAREN> name = NAME() <RPAREN>
+        { return new Tree.JUMP(name.label); }
+}
+
+Tree.LABEL LABEL() :
+{   Token t;   }
+{
+        <LABEL> <LPAREN> t = <ID> <RPAREN>
+        { return new Tree.LABEL(getLabel(t.image)); }
+}
+
+Tree.MEM MEM() :
+{   Tree.Exp exp;   }
+{   
+        <MEM> <LPAREN> exp = Exp() <RPAREN>
+        { return new Tree.MEM(exp); }
+}
+
+Tree.MOVE MOVE() :
+{   Tree.Exp dst, src;   }
+{
+    <MOVE> <LPAREN>
+        dst = Exp()
+        src = Exp()
+        <RPAREN>
+        { return new Tree.MOVE(dst,src); }
+}
+
+Tree.NAME NAME() :
+{   Token t;   }
+{   <NAME> <LPAREN> t = <ID> <RPAREN>
+        { return new Tree.NAME(getLabel(t.image)); }
+}
+
+Tree.SEQ SEQ() :
+{   Tree.Stm stm1, stm2;  }
+{
+    <SEQ> <LPAREN>
+        stm1 = Stm()
+        stm2 = Stm()
+        <RPAREN>
+        { return new Tree.SEQ(stm1,stm2); }
+}
+
+Tree.TEMP TEMP() :
+{   Token t;   }
+{
+        <TEMP> <LPAREN> t= <ID> <RPAREN>
+        { return new Tree.TEMP(
+                             getTemp(parseInt(t.image.substring(1)))); }
+}
