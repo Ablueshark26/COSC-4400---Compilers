@@ -140,11 +140,6 @@ public class Main
                         else
                                 frags = translate(text);
 	    }
-                catch (Parse.FragParseException p)
-            {
-                        System.err.println(p.getMessage());
-                        System.exit(-1);
-            }
                 catch (Parse.ParseException p)
             {
                         System.err.println(p.toString());

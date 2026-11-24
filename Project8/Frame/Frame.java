@@ -42,6 +42,7 @@ public abstract class Frame
   public abstract String record(Temp.Label label, List<Temp.Label> values);
   public abstract Temp.Label badPtr();
   public abstract Temp.Label badSub();
+  public abstract Temp.Temp[] allRegs();
   public abstract String tempMap(Temp.Temp temp);
   public abstract void printFrame(java.io.PrintWriter pw);
 

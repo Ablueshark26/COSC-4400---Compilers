@@ -164,7 +164,7 @@ public class RiscvFrame extends Frame.Frame
 
     public Temp[] colorRegs()   { return colorRegs; }
     public Temp[] specialRegs() { return specialRegs; }
-    public Temp[] allRegs()     { return registers; }
+    public Temp[] allRegs()     { return all32; }
     
 
     private static HashMap<Symbol,Label> labels = new HashMap<Symbol,Label>();
